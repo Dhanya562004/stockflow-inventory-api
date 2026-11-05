@@ -113,6 +113,7 @@ namespace InventoryManagementSystemAPI
             builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
             builder.Services.AddScoped<IPurchaseOrderItemRepository, PurchaseOrderItemRepository>();
             builder.Services.AddScoped<IStockRepository, StockRepository>();
+            builder.Services.AddScoped<IReportRepository, ReportRepository>();
 
             builder.Services.AddScoped<ITokenService, TokenService>();
             builder.Services.AddScoped<IProductService, ProductService>();
@@ -121,6 +122,7 @@ namespace InventoryManagementSystemAPI
             builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
             builder.Services.AddScoped<IPurchaseOrderItemService, PurchaseOrderItemService>();
             builder.Services.AddScoped<IStockService, StockService>();
+            builder.Services.AddScoped<IReportService, ReportService>();
 
             builder.Services.AddScoped<IdentityDataSeeder>();
             builder.Services.AddScoped<AppDataSeeder>();
