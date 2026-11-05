@@ -2,9 +2,12 @@
 
 [![Build & Test](https://github.com/Dhanya562004/stockflow-inventory-api/actions/workflows/ci.yml/badge.svg)](https://github.com/Dhanya562004/stockflow-inventory-api/actions/workflows/ci.yml)
 
-A production-inspired **Inventory Management System REST API** built with **ASP.NET Core 8**, **Entity Framework Core**, and **SQL Server**. This project demonstrates modern backend development practices including layered architecture, authentication, authorization, validation, and clean API design.
+A production-inspired **Inventory Management System REST API and MVC Web Application** built with **ASP.NET Core 8**, **Entity Framework Core**, and **SQL Server**. This project demonstrates modern backend development practices including layered architecture, authentication, authorization, validation, clean API design, and Razor views with plain JavaScript.
 
-> **Credits:** Original project by Michael Mitchell ([github.com/mmitchell3397](https://github.com/mmitchell3397)). Extensions in this fork: stock adjustment rule, low-stock SQL report, xUnit tests.
+> [!NOTE]
+> This application uses **ASP.NET Core 8 MVC and Web API** on the modern, cross-platform .NET 8 runtime (not legacy ASP.NET MVC on .NET Framework). No .NET Framework components or legacy APIs are used.
+
+> **Credits:** Original project by Michael Mitchell ([github.com/mmitchell3397](https://github.com/mmitchell3397)). Extensions in this fork: stock adjustment rule, low-stock SQL report, xUnit tests, Razor UI, GitHub Actions CI.
 
 ---
 
@@ -305,19 +308,19 @@ Product
 
 ### 2. Low-Stock Report (Raw SQL)
 - **Route:** `GET /api/reports/low-stock?threshold=N`
-- **Implementation:** Executes a parameterized raw SQL query through EF Core (`Database.SqlQuery<LowStockReportDto>`), performing a `JOIN` between products and stock data with a `GROUP BY` and a parameterized `HAVING` clause to prevent SQL injection.
+- **Implementation:** Executes a parameterized raw SQL query through EF Core (`Database.SqlQuery<LowStockReportDto>`), performing a `JOIN` between `StockLevels` and `Products` with a `GROUP BY` and a parameterized `HAVING` clause (`SUM(sl.Quantity) <= @threshold`) to prevent SQL injection and aggregate across multiple warehouse locations.
 - **Raw SQL Query:**
 ```sql
 SELECT 
     p.Id AS ProductId,
     p.Name AS ProductName,
     p.SKU AS SKU,
-    MIN(stock.QuantityInStock) AS CurrentStock,
+    CAST(SUM(sl.Quantity) AS INT) AS CurrentStock,
     p.ReorderLevel AS ReorderLevel
-FROM Products p
-INNER JOIN Products stock ON p.Id = stock.Id
+FROM StockLevels sl
+INNER JOIN Products p ON sl.ProductId = p.Id
 GROUP BY p.Id, p.Name, p.SKU, p.ReorderLevel
-HAVING MIN(stock.QuantityInStock) <= @threshold
+HAVING SUM(sl.Quantity) <= @threshold
 ORDER BY CurrentStock ASC
 ```
 
@@ -443,16 +446,21 @@ dotnet test
 dotnet run
 ```
 
-Swagger API documentation:
+Swagger API documentation (configured in `Properties/launchSettings.json`):
 ```text
-https://localhost:xxxx/swagger
+https://localhost:7011/swagger
+http://localhost:5228/swagger
+```
+Stock adjustment web interface:
+```text
+https://localhost:7011/stock
 ```
 
 ---
 
 # Test Results
 
-All tests are implemented in the `InventoryManagementSystemAPI.Tests` project using xUnit and FluentValidation:
+All tests are implemented in the `InventoryManagementSystemAPI.Tests` project using xUnit, FluentValidation, and WebApplicationFactory:
 
 ```text
 Test run for InventoryManagementSystemAPI.Tests.dll (.NETCoreApp,Version=v8.0)
@@ -461,14 +469,16 @@ VSTest version 17.11.1 (x64)
 Starting test execution, please wait...
 A total of 1 test files matched the specified pattern.
 
-Passed!  - Failed:     0, Passed:    32, Skipped:     0, Total:    32, Duration: 274 ms - InventoryManagementSystemAPI.Tests.dll (net8.0)
+Passed!  - Failed:     0, Passed:    34, Skipped:     5, Total:    39, Duration: 2.1 s - InventoryManagementSystemAPI.Tests.dll (net8.0)
 ```
 
-### Test Coverage Highlights
-- **Validation Tests (22 tests):** SKU max length, empty SKU, price > 0, cost > 0, quantity >= 0, reorder level >= 0, foreign key GUID rules, stock adjustment delta rules.
+### Test Suite Breakdown
+- **Validation Tests (22 tests):** SKU length & requirements, positive prices, costs, quantities, reorder levels, foreign key GUID rules, stock adjustment delta rules.
 - **Product Service Tests (6 tests):** Duplicate SKU prevention, duplicate barcode detection, retrieval, update, and deletion rules without database dependencies.
 - **Stock Adjustment Service Tests (6 tests):** Valid adjustments staying positive, adjustments hitting exactly zero, adjustments rejected due to negative balance, transient concurrency retry recovery, and exceeding retry limits (3 attempts).
 - **Reports Tests (2 tests):** Low-stock report filtering products strictly at or below threshold and rejecting negative threshold inputs.
+- **Stock View & Controller Tests (2 tests):** Razor view returns valid ViewResult and form action matches `POST /api/stock/adjust`.
+- **Integration Tests (5 tests, skipped on local host without active Docker daemon, run in CI):** WebApplicationFactory endpoint coverage (200, 404, 409, 400) and 20-client concurrent adjustment test against SQL Server container.
 
 ---
 
@@ -481,12 +491,12 @@ SELECT
     p.Id AS ProductId,
     p.Name AS ProductName,
     p.SKU AS SKU,
-    MIN(stock.QuantityInStock) AS CurrentStock,
+    CAST(SUM(sl.Quantity) AS INT) AS CurrentStock,
     p.ReorderLevel AS ReorderLevel
-FROM Products p
-INNER JOIN Products stock ON p.Id = stock.Id
+FROM StockLevels sl
+INNER JOIN Products p ON sl.ProductId = p.Id
 GROUP BY p.Id, p.Name, p.SKU, p.ReorderLevel
-HAVING MIN(stock.QuantityInStock) <= @threshold
+HAVING SUM(sl.Quantity) <= @threshold
 ORDER BY CurrentStock ASC
 ```
 
@@ -498,7 +508,7 @@ This project helped strengthen my understanding of:
 
 ## ASP.NET Core
 
-- Building RESTful APIs
+- Building RESTful APIs and MVC Razor Views
 - Middleware Pipeline
 - Dependency Injection
 - Controller Design
@@ -511,7 +521,7 @@ This project helped strengthen my understanding of:
 - Migrations
 - Database Seeding
 
-## Software Architectureche
+## Software Architecture
 
 - Repository Pattern
 - Service Layer
@@ -549,22 +559,13 @@ This project helped strengthen my understanding of:
 # Future Improvements
 
 - Global Exception Middleware
-- Authorization Policies
-- Custom Exceptions
-- Logging with Serilog
-- Pagination
-- Filtering
-- Searching
-- Sorting
-- Redis Caching
-- API Versioning
-- Unit Testing
-- Integration Testing
-- Docker Support
-- CI/CD Pipeline
-- Azure Deployment
-- React Frontend
-- Inventory Reporting Dashboard
+- Custom Authorization Policies
+- Centralized Structured Logging (e.g. Serilog)
+- Pagination, Filtering & Sorting for large catalogs
+- Redis Caching for frequently read inventory
+- API Versioning (URL or header-based)
+- Standalone SPA Frontend (React or Next.js)
+- Advanced Analytics & Automated Reorder Webhooks
 
 ---
 
