@@ -14,6 +14,7 @@ using InventoryManagementSystemAPI.Validators.Category;
 using InventoryManagementSystemAPI.Validators.Product;
 using InventoryManagementSystemAPI.Validators.PurchaseOrder;
 using InventoryManagementSystemAPI.Validators.PurchaseOrderItem;
+using InventoryManagementSystemAPI.Validators.Stock;
 using InventoryManagementSystemAPI.Validators.Supplier;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -111,6 +112,7 @@ namespace InventoryManagementSystemAPI
             builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
             builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
             builder.Services.AddScoped<IPurchaseOrderItemRepository, PurchaseOrderItemRepository>();
+            builder.Services.AddScoped<IStockRepository, StockRepository>();
 
             builder.Services.AddScoped<ITokenService, TokenService>();
             builder.Services.AddScoped<IProductService, ProductService>();
@@ -118,6 +120,7 @@ namespace InventoryManagementSystemAPI
             builder.Services.AddScoped<ISupplierService, SupplierService>();
             builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
             builder.Services.AddScoped<IPurchaseOrderItemService, PurchaseOrderItemService>();
+            builder.Services.AddScoped<IStockService, StockService>();
 
             builder.Services.AddScoped<IdentityDataSeeder>();
             builder.Services.AddScoped<AppDataSeeder>();
@@ -125,6 +128,7 @@ namespace InventoryManagementSystemAPI
             builder.Services.AddControllers();
 
             builder.Services.AddFluentValidationAutoValidation();
+            builder.Services.AddValidatorsFromAssemblyContaining<AdjustStockDtoValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<CreateCategoryDtoValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<UpdateCategoryDtoValidator>();
             builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDtoValidator>();

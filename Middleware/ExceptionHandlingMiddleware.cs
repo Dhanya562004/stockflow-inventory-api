@@ -1,4 +1,4 @@
-﻿using InventoryManagementSystemAPI.Exceptions;
+using InventoryManagementSystemAPI.Exceptions;
 
 namespace InventoryManagementSystemAPI.Middleware
 {
@@ -30,6 +30,8 @@ namespace InventoryManagementSystemAPI.Middleware
                 NotFoundException => StatusCodes.Status404NotFound,
 
                 DuplicateResourceException => StatusCodes.Status409Conflict,
+
+                InsufficientStockException => StatusCodes.Status409Conflict,
 
                 _ => StatusCodes.Status500InternalServerError
             };

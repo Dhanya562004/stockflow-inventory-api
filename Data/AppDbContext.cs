@@ -1,4 +1,4 @@
-﻿using InventoryManagementSystemAPI.Models;
+using InventoryManagementSystemAPI.Models;
 using InventoryManagementSystemAPI.Models.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -72,6 +72,10 @@ namespace InventoryManagementSystemAPI.Data
             builder.Entity<Product>()
                 .Property(p => p.Cost)
                 .HasPrecision(18, 2);
+
+            builder.Entity<Product>()
+                .Property(p => p.RowVersion)
+                .IsRowVersion();
 
             builder.Entity<PurchaseOrder>()
                 .Property(p => p.TotalAmount)

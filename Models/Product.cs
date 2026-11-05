@@ -1,4 +1,4 @@
-﻿namespace InventoryManagementSystemAPI.Models
+namespace InventoryManagementSystemAPI.Models
 {
     public class Product
     {
@@ -13,6 +13,7 @@
         public int ReorderLevel { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public byte[] RowVersion { get; set; } = [];
 
         // Relationships
         public Guid CategoryId { get; set; } 

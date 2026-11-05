@@ -141,3 +141,4 @@ namespace InventoryManagementSystemAPI.Tests.Validators
         }
     }
 }
+
