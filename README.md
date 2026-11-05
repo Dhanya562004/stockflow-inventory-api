@@ -1,11 +1,14 @@
-﻿# Inventory Management System API
+# Inventory Management System API
 
 A production-inspired **Inventory Management System REST API** built with **ASP.NET Core 8**, **Entity Framework Core**, and **SQL Server**. This project demonstrates modern backend development practices including layered architecture, authentication, authorization, validation, and clean API design.
+
+> **Credits:** Original project by Michael Mitchell ([github.com/mmitchell3397](https://github.com/mmitchell3397)). Extensions in this fork: stock adjustment rule, low-stock SQL report, xUnit tests.
 
 ---
 
 # Table of Contents
 
+- [Credits](#credits)
 - [Overview](#overview)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
@@ -14,11 +17,15 @@ A production-inspired **Inventory Management System REST API** built with **ASP.
 - [Project Structure](#project-structure)
 - [Database Design](#database-design)
 - [API Resources](#api-resources)
+- [Fork Extensions](#fork-extensions)
+  - [1. Stock Adjustment Endpoint](#1-stock-adjustment-endpoint)
+  - [2. Low-Stock Report (Raw SQL)](#2-low-stock-report-raw-sql)
+  - [3. xUnit Test Suite](#3-xunit-test-suite)
 - [Authentication & Authorization](#authentication--authorization)
 - [Validation](#validation)
 - [Database Seeding](#database-seeding)
 - [Getting Started](#getting-started)
-- [API Demonstration](#api-demonstration)
+- [Test Results](#test-results)
 - [What I Learned](#what-i-learned)
 - [Future Improvements](#future-improvements)
 - [Author](#author)
@@ -269,6 +276,8 @@ Product
 - Suppliers
 - Purchase Orders
 - Purchase Order Items
+- Stock Adjustments (`POST /api/stock/adjust`)
+- Low-Stock Reports (`GET /api/reports/low-stock?threshold=N`)
 
 ## Identity
 
@@ -277,6 +286,44 @@ Product
 - Current User
 - Change Password
 - Assign Role
+
+---
+
+# Fork Extensions
+
+### 1. Stock Adjustment Endpoint
+- **Route:** `POST /api/stock/adjust`
+- **Body:** `{ "productId": "GUID", "delta": int }`
+- **Behavior:**
+  - `200 OK`: When the resulting stock remains at or above zero, returns the new quantity.
+  - `409 Conflict`: Rejects any adjustment that would result in a negative quantity with a clear message.
+  - `404 Not Found`: Returned when the product ID does not exist.
+  - `400 Bad Request`: Validation errors on invalid inputs (e.g. empty GUID or zero delta).
+- **Concurrency & Transaction Safety:** Implements optimistic concurrency with SQL Server `rowversion` concurrency token on `Product.RowVersion`, wrapped in a database transaction with up to 3 retry attempts on `DbUpdateConcurrencyException`.
+
+### 2. Low-Stock Report (Raw SQL)
+- **Route:** `GET /api/reports/low-stock?threshold=N`
+- **Implementation:** Executes a parameterized raw SQL query through EF Core (`Database.SqlQuery<LowStockReportDto>`), performing a `JOIN` between products and stock data with a `GROUP BY` and a parameterized `HAVING` clause to prevent SQL injection.
+- **Raw SQL Query:**
+```sql
+SELECT 
+    p.Id AS ProductId,
+    p.Name AS ProductName,
+    p.SKU AS SKU,
+    MIN(stock.QuantityInStock) AS CurrentStock,
+    p.ReorderLevel AS ReorderLevel
+FROM Products p
+INNER JOIN Products stock ON p.Id = stock.Id
+GROUP BY p.Id, p.Name, p.SKU, p.ReorderLevel
+HAVING MIN(stock.QuantityInStock) <= @threshold
+ORDER BY CurrentStock ASC
+```
+
+### 3. xUnit Test Suite
+- Test project: `InventoryManagementSystemAPI.Tests`
+- Comprehensive unit tests for FluentValidation validators (Create/Update Product, AdjustStock).
+- Service tests using in-memory fake repositories for `ProductService`, `StockService`, and `ReportService`.
+- Concurrency simulation verifying positive adjustments, zero adjustments, negative rejections, and retry limits.
 
 ---
 
@@ -340,7 +387,7 @@ Automatically seeds:
 
 # Getting Started
 
-## Clone Repository
+## 1. Clone Repository
 
 ```bash
 git clone https://github.com/mmitchell3397/IMS-WebAPI.git
@@ -348,7 +395,7 @@ git clone https://github.com/mmitchell3397/IMS-WebAPI.git
 
 ---
 
-## Restore Packages
+## 2. Restore Packages
 
 ```bash
 dotnet restore
@@ -356,23 +403,21 @@ dotnet restore
 
 ---
 
-## Configure SQL Server
+## 3. Configure SQL Server
 
-Update:
-
-```text
-appsettings.json
-```
-
-Configure:
+Update `appsettings.json` with your SQL Server connection string:
 
 ```json
-ConnectionStrings
+"ConnectionStrings": {
+  "DefaultConnection": "Server=localhost;Database=InventoryDB;Trusted_Connection=True;TrustServerCertificate=True;"
+}
 ```
 
 ---
 
-## Apply Migrations
+## 4. Apply Database Migrations
+
+Apply Entity Framework Core migrations to your SQL Server instance:
 
 ```bash
 dotnet ef database update
@@ -380,104 +425,68 @@ dotnet ef database update
 
 ---
 
-## Run
+## 5. Run Test Suite
+
+Execute all unit and service tests across the solution:
+
+```bash
+dotnet test
+```
+
+---
+
+## 6. Run Application
 
 ```bash
 dotnet run
 ```
 
-Swagger:
-
+Swagger API documentation:
 ```text
 https://localhost:xxxx/swagger
 ```
 
 ---
 
-# API Demonstration
+# Test Results
 
-The following screenshots demonstrate the application's functionality.
+All tests are implemented in the `InventoryManagementSystemAPI.Tests` project using xUnit and FluentValidation:
 
-## Authentication
+```text
+Test run for InventoryManagementSystemAPI.Tests.dll (.NETCoreApp,Version=v8.0)
+VSTest version 17.11.1 (x64)
 
-### Register
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
 
-![Register](docs/images/register.jpeg)
+Passed!  - Failed:     0, Passed:    32, Skipped:     0, Total:    32, Duration: 274 ms - InventoryManagementSystemAPI.Tests.dll (net8.0)
+```
 
-Creates a new user account.
-
----
-
-### Login
-
-![Login](docs/images/login.jpeg)
-
-Returns a JWT Bearer Token.
-
-> **Note:** Make sure to click the ***Authorize*** button to add your ***JWT Bearer Token*** before continuing.
----
-
-### Get Current User
-
-![Current User](docs/images/current_user.jpeg)
-
-Retrieves the authenticated user's information.
+### Test Coverage Highlights
+- **Validation Tests (22 tests):** SKU max length, empty SKU, price > 0, cost > 0, quantity >= 0, reorder level >= 0, foreign key GUID rules, stock adjustment delta rules.
+- **Product Service Tests (6 tests):** Duplicate SKU prevention, duplicate barcode detection, retrieval, update, and deletion rules without database dependencies.
+- **Stock Adjustment Service Tests (6 tests):** Valid adjustments staying positive, adjustments hitting exactly zero, adjustments rejected due to negative balance, transient concurrency retry recovery, and exceeding retry limits (3 attempts).
+- **Reports Tests (2 tests):** Low-stock report filtering products strictly at or below threshold and rejecting negative threshold inputs.
 
 ---
 
-### Change Password
+# Low-Stock SQL Query
 
-![Change Password](docs/images/change_password.jpeg)
+The low-stock report endpoint (`GET /api/reports/low-stock?threshold=N`) executes the following parameterized raw SQL query via Entity Framework Core (`Database.SqlQuery<LowStockReportDto>`):
 
-Changes the authenticated user's password.
-
----
-
-### Assign Role
-
-![Assign Role](docs/images/assign_role.jpeg)
-
-Administrator assigning a role to another user.
-
->**Note:** The ***IdentityDataSeeder.cs*** class includes an Admin account with a password and role assigned.
----
-
-# Product Endpoints
->**Note:** All other models will follow the same pattern.
-
-### Get All Products
-
-![Get Products](docs/images/get_all_products.jpeg)
-
----
-
-### Get Product By ID
-
-![Get Product](docs/images/get_product_by_id.jpeg)
-
----
-
-### Create Product
-
-![Create Product](docs/images/create_product.jpeg)
-
->**NOTE:** Requires ***Admin*** or ***Manager*** level authorization.
-
----
-
-### Update Product
-
-![Update Product](docs/images/update_product.jpeg)
-
->**NOTE:** Requires ***Admin*** or ***Manager*** level authorization.
-
----
-
-### Delete Product
-
-![Delete Product](docs/images/delete_product.jpeg)
-
->**NOTE:** Requires ***Admin*** level authorization.
+```sql
+SELECT 
+    p.Id AS ProductId,
+    p.Name AS ProductName,
+    p.SKU AS SKU,
+    MIN(stock.QuantityInStock) AS CurrentStock,
+    p.ReorderLevel AS ReorderLevel
+FROM Products p
+INNER JOIN Products stock ON p.Id = stock.Id
+GROUP BY p.Id, p.Name, p.SKU, p.ReorderLevel
+HAVING MIN(stock.QuantityInStock) <= @threshold
+ORDER BY CurrentStock ASC
+```
 
 ---
 
