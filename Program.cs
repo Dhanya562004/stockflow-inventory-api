@@ -123,6 +123,7 @@ namespace InventoryManagementSystemAPI
             builder.Services.AddScoped<IPurchaseOrderItemService, PurchaseOrderItemService>();
             builder.Services.AddScoped<IStockService, StockService>();
             builder.Services.AddScoped<IReportService, ReportService>();
+            builder.Services.AddHttpClient<ILlmClient, OpenAiLlmClient>();
 
             builder.Services.AddScoped<IdentityDataSeeder>();
             builder.Services.AddScoped<AppDataSeeder>();

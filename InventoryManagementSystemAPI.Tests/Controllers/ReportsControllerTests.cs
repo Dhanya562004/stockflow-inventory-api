@@ -3,6 +3,7 @@ using InventoryManagementSystemAPI.DTOs.Report;
 using InventoryManagementSystemAPI.Models;
 using InventoryManagementSystemAPI.Services.Implementations;
 using InventoryManagementSystemAPI.Tests.Fakes;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
@@ -49,6 +50,73 @@ namespace InventoryManagementSystemAPI.Tests.Controllers
 
             Assert.IsType<BadRequestObjectResult>(actionResult);
         }
+
+        [Fact]
+        public async Task GetLowStockSummary_WhenCalledWithThreshold_ReturnsLlmSummary()
+        {
+            // Arrange
+            var prod = new Product { Id = Guid.NewGuid(), Name = "Low Item", SKU = "LOW-99", QuantityInStock = 2, ReorderLevel = 10 };
+            var fakeRepo = new FakeReportRepository(new[] { prod });
+            var service = new ReportService(fakeRepo);
+            var fakeLlm = new FakeLlmClient("Reorder recommendation: purchase 20 units of LOW-99 immediately.");
+            var controller = new ReportsController(service, fakeLlm);
+
+            // Act
+            var actionResult = await controller.GetLowStockSummary(threshold: 5);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(actionResult);
+            var response = Assert.IsType<LowStockSummaryResponseDto>(okResult.Value);
+            Assert.Equal(5, response.Threshold);
+            Assert.Equal(1, response.ItemCount);
+            Assert.Equal("Reorder recommendation: purchase 20 units of LOW-99 immediately.", response.Summary);
+        }
+
+        [Fact]
+        public async Task GetLowStockSummary_WhenLlmThrowsException_Returns503ServiceUnavailable()
+        {
+            // Arrange
+            var prod = new Product { Id = Guid.NewGuid(), Name = "Low Item", SKU = "LOW-99", QuantityInStock = 2, ReorderLevel = 10 };
+            var fakeRepo = new FakeReportRepository(new[] { prod });
+            var service = new ReportService(fakeRepo);
+            var fakeLlm = new FakeLlmClient(new HttpRequestException("External API network failure"));
+            var controller = new ReportsController(service, fakeLlm);
+
+            // Act
+            var actionResult = await controller.GetLowStockSummary(threshold: 5);
+
+            // Assert: 503 Service Unavailable
+            var statusResult = Assert.IsType<ObjectResult>(actionResult);
+            Assert.Equal(StatusCodes.Status503ServiceUnavailable, statusResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetLowStockSummary_WhenThresholdNegative_ReturnsBadRequest()
+        {
+            var fakeRepo = new FakeReportRepository();
+            var service = new ReportService(fakeRepo);
+            var fakeLlm = new FakeLlmClient("summary");
+            var controller = new ReportsController(service, fakeLlm);
+
+            var actionResult = await controller.GetLowStockSummary(threshold: -5);
+
+            Assert.IsType<BadRequestObjectResult>(actionResult);
+        }
+
+        [Fact]
+        public async Task GetLowStockSummary_WhenNoItemsLowStock_ReturnsFriendlyMessageWithoutCallingLlm()
+        {
+            var fakeRepo = new FakeReportRepository(); // empty
+            var service = new ReportService(fakeRepo);
+            var fakeLlm = new FakeLlmClient("Should not be called");
+            var controller = new ReportsController(service, fakeLlm);
+
+            var actionResult = await controller.GetLowStockSummary(threshold: 5);
+
+            var okResult = Assert.IsType<OkObjectResult>(actionResult);
+            var response = Assert.IsType<LowStockSummaryResponseDto>(okResult.Value);
+            Assert.Equal(0, response.ItemCount);
+            Assert.Contains("No immediate reorders required", response.Summary);
+        }
     }
 }
-
