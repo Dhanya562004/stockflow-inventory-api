@@ -1,5 +1,7 @@
 # Inventory Management System API
 
+[![Build & Test](https://github.com/Dhanya562004/stockflow-inventory-api/actions/workflows/ci.yml/badge.svg)](https://github.com/Dhanya562004/stockflow-inventory-api/actions/workflows/ci.yml)
+
 A production-inspired **Inventory Management System REST API** built with **ASP.NET Core 8**, **Entity Framework Core**, and **SQL Server**. This project demonstrates modern backend development practices including layered architecture, authentication, authorization, validation, and clean API design.
 
 > **Credits:** Original project by Michael Mitchell ([github.com/mmitchell3397](https://github.com/mmitchell3397)). Extensions in this fork: stock adjustment rule, low-stock SQL report, xUnit tests.
