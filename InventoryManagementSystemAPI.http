@@ -1,0 +1,257 @@
+@InventoryManagementSystemAPI_HostAddress = https://localhost:7011
+@userToken = YOUR_JWT_HERE
+@managerToken = YOUR_JWT_HERE
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImI3YmIzNWRlLTBiZTAtNGE1NC05ZTVjLTNiY2ZjMzk1ZjI5NCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImFkbWluQHN5c3RlbS5jb20iLCJmaXJzdE5hbWUiOiJTeXN0ZW0iLCJsYXN0TmFtZSI6IkFkbWluIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJleHAiOjE3ODQ0ODEwNjgsImlzcyI6IkludmVudG9yeU1hbmFnZW1lbnRTeXN0ZW1BUEkiLCJhdWQiOiJJbnZlbnRvcnlNYW5hZ2VtZW50U3lzdGVtQVBJIn0.h0Aok3LlGmBPxMyO7M6JToZDopLsd-QoZrPpwr0wuNs
+
+// POST -> Register User
+POST {{InventoryManagementSystemAPI_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "testmanager@system.com",
+  "password": "TestManager@12345$",
+  "firstName": "Test",
+  "lastName": "Manager"
+}
+
+###
+
+// POST -> Login Normal User -> ** COPY TOKEN FROM RESPONSE **
+POST {{InventoryManagementSystemAPI_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "testnewuser@test.com",
+  "password": "TestNew@12345"
+}
+
+###
+
+// POST -> Login Manager User -> ** COPY TOKEN FROM RESPONSE **
+POST {{InventoryManagementSystemAPI_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "testmanager@system.com",
+  "password": "TestManager@12345$"
+}
+
+###
+
+// POST -> Login Admin User -> ** COPY TOKEN FROM RESPONSE **
+POST {{InventoryManagementSystemAPI_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@system.com",
+  "password": "Admin@12345!"
+}
+
+###
+
+// POST -> Get Current User
+GET {{InventoryManagementSystemAPI_HostAddress}}/api/auth/me
+Authorization: Bearer {{token}}
+
+###
+
+// POST -> Role Protection -> Normal User
+POST {{InventoryManagementSystemAPI_HostAddress}}/api/auth/assign-role
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "testuser@test.com",
+  "role"": "Admin"
+}
+
+###
+
+// POST -> Role Protection -> Admin User
+POST {{InventoryManagementSystemAPI_HostAddress}}/api/auth/assign-role
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "email": "admin@system.com",
+  "role": "Admin"
+}
+
+###
+
+// POST -> Change Password
+POST {{InventoryManagementSystemAPI_HostAddress}}/api/auth/change-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "currentPassword": "Test@12345",
+  "newPassword": "NewPass@12345"
+}
+
+###
+
+// POST -> Assign Role 
+POST {{InventoryManagementSystemAPI_HostAddress}}/api/auth/assign-role
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "email": "testmanager@system.com",
+  "role": "Manager"
+}
+
+###
+
+// *** VALIDATION ENDPOINTS ***
+
+// POST -> Validation Failure
+POST {{InventoryManagementSystemAPI_HostAddress}}/api/products
+Content-Type: application/json
+
+{
+    "name": "",
+    "sku": "",
+    "price": -10
+}
+
+###
+
+// POST -> Not Found Failure
+POST {{InventoryManagementSystemAPI_HostAddress}}/api/300
+Content-Type: application/json
+
+###
+
+// POST -> Duplication Failure
+POST {{InventoryManagementSystemAPI_HostAddress}}/api/products
+Content-Type: application/json
+
+{
+}
+
+###
+
+// ** INVENTORY ENDPOINTS **
+
+// ** PRODUCTS CONTROLLER ** 
+
+// * Admin *
+
+// GET -> All Products
+GET {{InventoryManagementSystemAPI_HostAddress}}/api/products
+Authorization: Bearer {{adminToken}}
+
+###
+
+// GET -> Product By Id
+GET {{InventoryManagementSystemAPI_HostAddress}}/api/products/{ID}
+Authorization: Bearer {{adminToken}}
+
+###
+
+// POST -> Create Product
+POST {{InventoryManagementSystemAPI_HostAddress}}/api/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+}
+
+###
+
+// PUT -> Update Product By Id
+PUT {{InventoryManagementSystemAPI_HostAddress}}/api/products/{ID}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+}
+
+###
+
+// DELETE -> Delete Product By Id
+DELETE {{InventoryManagementSystemAPI_HostAddress}}/api/products/{ID}
+Authorization: Bearer {{adminToken}}
+
+###
+
+// * Manager *
+
+// GET -> All Products
+GET {{InventoryManagementSystemAPI_HostAddress}}/api/products
+Authorization: Bearer {{managerToken}}
+
+###
+
+// GET -> Product By Id
+GET {{InventoryManagementSystemAPI_HostAddress}}/api/products/{ID}
+Authorization: Bearer {{managerToken}}
+
+###
+
+// POST -> Create Product
+POST {{InventoryManagementSystemAPI_HostAddress}}/api/products
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+}
+
+###
+
+// PUT -> Update Product By Id
+PUT {{InventoryManagementSystemAPI_HostAddress}}/api/products/{ID}
+Authorization: Bearer {{managerToken}}
+Content-Type: application/json
+
+{
+}
+
+###
+
+// DELETE -> Delete Product By Id
+DELETE {{InventoryManagementSystemAPI_HostAddress}}/api/products/{ID}
+Authorization: Bearer {{managerToken}}
+
+###
+
+// * User * 
+
+// GET -> All Products
+GET {{InventoryManagementSystemAPI_HostAddress}}/api/products
+Authorization: Bearer {{userToken}}
+
+###
+
+// GET -> Product By Id
+GET {{InventoryManagementSystemAPI_HostAddress}}/api/products/{ID}
+Authorization: Bearer {{userToken}}
+
+###
+
+// POST -> Create Product
+POST {{InventoryManagementSystemAPI_HostAddress}}/api/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+}
+
+###
+
+// PUT -> Update Product By Id
+PUT {{InventoryManagementSystemAPI_HostAddress}}/api/products/{ID}
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+}
+
+###
+
+// DELETE -> Delete Product By Id
+DELETE {{InventoryManagementSystemAPI_HostAddress}}/api/products/{ID}
+Authorization: Bearer {{userToken}}
+
+###

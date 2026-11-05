@@ -1,0 +1,11 @@
+﻿Role Ideas
+	- Administrator
+		- Manage everything
+	
+	- Manager
+		- Manage inventory
+		- View reports
+
+	- User -> (Eventually change to Employee)
+		- View inventory
+		- Update stock
