@@ -127,7 +127,7 @@ namespace InventoryManagementSystemAPI
             builder.Services.AddScoped<IdentityDataSeeder>();
             builder.Services.AddScoped<AppDataSeeder>();
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllersWithViews();
 
             builder.Services.AddFluentValidationAutoValidation();
             builder.Services.AddValidatorsFromAssemblyContaining<AdjustStockDtoValidator>();
@@ -212,6 +212,7 @@ namespace InventoryManagementSystemAPI
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
 
             app.UseCors("Frontend");
 

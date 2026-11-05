@@ -6,13 +6,19 @@ namespace InventoryManagementSystemAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class StockController : ControllerBase
+    public class StockController : Controller
     {
         private readonly IStockService _stockService;
 
         public StockController(IStockService stockService)
         {
             _stockService = stockService;
+        }
+
+        [HttpGet("/stock")]
+        public IActionResult Index()
+        {
+            return View("~/Views/Stock/Index.cshtml");
         }
 
         [HttpPost("adjust")]
