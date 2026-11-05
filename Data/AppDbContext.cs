@@ -15,6 +15,7 @@ namespace InventoryManagementSystemAPI.Data
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
         public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; }
+        public DbSet<StockLevel> StockLevels { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -93,6 +94,24 @@ namespace InventoryManagementSystemAPI.Data
             builder.Entity<Product>()
                 .HasIndex(p => p.Barcode)
                 .IsUnique();
+
+            // StockLevel Constraints
+            builder.Entity<StockLevel>()
+                .HasOne(s => s.Product)
+                .WithMany(p => p.StockLevels)
+                .HasForeignKey(s => s.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<StockLevel>()
+                .Property(s => s.RowVersion)
+                .IsRowVersion();
+
+            builder.Entity<StockLevel>()
+                .HasIndex(s => new { s.ProductId, s.LocationId }, "IX_StockLevels_ProductId_LocationId_Unique")
+                .IsUnique();
+
+            builder.Entity<StockLevel>()
+                .HasIndex(s => new { s.ProductId, s.LocationId }, "IX_StockLevels_ProductId_LocationId_Lookup");
         }
     }
 }

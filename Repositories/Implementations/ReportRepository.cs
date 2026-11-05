@@ -16,20 +16,19 @@ namespace InventoryManagementSystemAPI.Repositories.Implementations
 
         public async Task<List<LowStockReportDto>> GetLowStockReportAsync(int threshold)
         {
-            // Parameterized raw SQL query using FromSql / SqlQuery with string interpolation (prevents SQL injection)
-            // JOIN between products (p) and stock (aliased Products table) and GROUP BY
+            // Parameterized raw SQL query joining Products and StockLevels, grouped by product and filtered by SUM(Quantity) <= @threshold
             return await _context.Database.SqlQuery<LowStockReportDto>($@"
                 SELECT 
                     p.Id AS ProductId,
                     p.Name AS ProductName,
                     p.SKU AS SKU,
-                    MIN(stock.QuantityInStock) AS CurrentStock,
+                    CAST(COALESCE(SUM(sl.Quantity), 0) AS int) AS TotalStock,
                     p.ReorderLevel AS ReorderLevel
                 FROM Products p
-                INNER JOIN Products stock ON p.Id = stock.Id
+                INNER JOIN StockLevels sl ON p.Id = sl.ProductId
                 GROUP BY p.Id, p.Name, p.SKU, p.ReorderLevel
-                HAVING MIN(stock.QuantityInStock) <= {threshold}
-                ORDER BY CurrentStock ASC").ToListAsync();
+                HAVING SUM(sl.Quantity) <= {threshold}
+                ORDER BY TotalStock ASC").ToListAsync();
         }
     }
 }

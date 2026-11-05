@@ -7,3 +7,4 @@ namespace InventoryManagementSystemAPI.Repositories.Interfaces
         Task<List<LowStockReportDto>> GetLowStockReportAsync(int threshold);
     }
 }
+

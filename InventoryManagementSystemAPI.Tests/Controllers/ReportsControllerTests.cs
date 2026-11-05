@@ -32,8 +32,8 @@ namespace InventoryManagementSystemAPI.Tests.Controllers
             var reportList = report.ToList();
 
             Assert.Equal(2, reportList.Count);
-            Assert.Contains(reportList, item => item.ProductId == prod1.Id && item.CurrentStock == 3);
-            Assert.Contains(reportList, item => item.ProductId == prod2.Id && item.CurrentStock == 10);
+            Assert.Contains(reportList, item => item.ProductId == prod1.Id && item.TotalStock == 3);
+            Assert.Contains(reportList, item => item.ProductId == prod2.Id && item.TotalStock == 10);
             Assert.DoesNotContain(reportList, item => item.ProductId == prod3.Id);
             Assert.DoesNotContain(reportList, item => item.ProductId == prod4.Id);
         }
@@ -51,3 +51,4 @@ namespace InventoryManagementSystemAPI.Tests.Controllers
         }
     }
 }
+

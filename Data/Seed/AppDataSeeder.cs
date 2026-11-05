@@ -1,4 +1,4 @@
-﻿using InventoryManagementSystemAPI.Models;
+using InventoryManagementSystemAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
@@ -18,6 +18,7 @@ namespace InventoryManagementSystemAPI.Data.Seed
             await SeedCategoriesAsync();
             await SeedSuppliersAsync();
             await SeedProductsAsync();
+            await SeedStockLevelsAsync();
             await SeedPurchaseOrdersAsync();
             await SeedPurchaseOrderItemsAsync();
             await UpdatePurchaseOrderTotalsAsync();
@@ -362,6 +363,41 @@ namespace InventoryManagementSystemAPI.Data.Seed
                         item.Quantity * item.Cost);
             }
 
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task SeedStockLevelsAsync()
+        {
+            if (await _context.StockLevels.AnyAsync())
+                return;
+
+            var products = await _context.Products.ToListAsync();
+            var stockLevels = new List<StockLevel>();
+
+            foreach (var product in products)
+            {
+                var primaryQty = product.QuantityInStock * 2 / 3;
+                var secondaryQty = product.QuantityInStock - primaryQty;
+
+                stockLevels.Add(new StockLevel
+                {
+                    ProductId = product.Id,
+                    LocationId = "WH-MAIN",
+                    Quantity = primaryQty
+                });
+
+                if (secondaryQty > 0)
+                {
+                    stockLevels.Add(new StockLevel
+                    {
+                        ProductId = product.Id,
+                        LocationId = "WH-SECONDARY",
+                        Quantity = secondaryQty
+                    });
+                }
+            }
+
+            await _context.StockLevels.AddRangeAsync(stockLevels);
             await _context.SaveChangesAsync();
         }
     }

@@ -273,6 +273,38 @@ namespace InventoryManagementSystemAPI.Migrations
                     b.ToTable("PurchaseOrderItems");
                 });
 
+            modelBuilder.Entity("InventoryManagementSystemAPI.Models.StockLevel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("LocationId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "ProductId", "LocationId" }, "IX_StockLevels_ProductId_LocationId_Lookup");
+
+                    b.HasIndex(new[] { "ProductId", "LocationId" }, "IX_StockLevels_ProductId_LocationId_Unique")
+                        .IsUnique();
+
+                    b.ToTable("StockLevels");
+                });
+
             modelBuilder.Entity("InventoryManagementSystemAPI.Models.Supplier", b =>
                 {
                     b.Property<Guid>("Id")
@@ -471,6 +503,17 @@ namespace InventoryManagementSystemAPI.Migrations
                     b.Navigation("PurchaseOrder");
                 });
 
+            modelBuilder.Entity("InventoryManagementSystemAPI.Models.StockLevel", b =>
+                {
+                    b.HasOne("InventoryManagementSystemAPI.Models.Product", "Product")
+                        .WithMany("StockLevels")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("InventoryManagementSystemAPI.Models.Identity.ApplicationRole", null)
@@ -530,6 +573,8 @@ namespace InventoryManagementSystemAPI.Migrations
             modelBuilder.Entity("InventoryManagementSystemAPI.Models.Product", b =>
                 {
                     b.Navigation("PurchaseOrderItems");
+
+                    b.Navigation("StockLevels");
                 });
 
             modelBuilder.Entity("InventoryManagementSystemAPI.Models.PurchaseOrder", b =>

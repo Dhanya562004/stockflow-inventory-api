@@ -23,7 +23,7 @@ namespace InventoryManagementSystemAPI.Tests.Fakes
                     ProductId = p.Id,
                     ProductName = p.Name,
                     SKU = p.SKU,
-                    CurrentStock = p.QuantityInStock,
+                    TotalStock = p.QuantityInStock,
                     ReorderLevel = p.ReorderLevel
                 })
                 .ToList();
@@ -32,3 +32,4 @@ namespace InventoryManagementSystemAPI.Tests.Fakes
         }
     }
 }
+

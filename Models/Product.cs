@@ -21,5 +21,6 @@ namespace InventoryManagementSystemAPI.Models
         public Guid SupplierId { get; set; }
         public Supplier? Supplier { get; set; }
         public ICollection<PurchaseOrderItem> PurchaseOrderItems { get; set; } = [];
+        public ICollection<StockLevel> StockLevels { get; set; } = [];
     }
 }
