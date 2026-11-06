@@ -466,14 +466,17 @@ https://localhost:7011/stock
 ### 1. .NET Test Suite (`xUnit`)
 Executed with `dotnet test`:
 
-```text
-Passed!  - Failed:     0, Passed:    41, Skipped:     7, Total:    48, Duration: 703 ms - InventoryManagementSystemAPI.Tests.dll (net8.0)
-```
+- **Local Execution:**
+  ```text
+  Passed!  - Failed:     0, Passed:    41, Skipped:     7, Total:    48, Duration: 578 ms - InventoryManagementSystemAPI.Tests.dll (net8.0)
+  ```
+  *(7 skipped locally: 5 container integration tests skipped when local SQL Server is unavailable; 2 live tests skipped when `LLM_API_KEY` is not set)*
 
-- **Total .NET Tests:** 48
-- **Passed:** 41
-- **Failed:** 0
-- **Skipped Locally:** 7 (5 container integration tests skipped when local SQL Server is unavailable; 2 live tests skipped when `LLM_API_KEY` is not set)
+- **GitHub Actions CI Execution (with live SQL Server 2022 container):**
+  ```text
+  Passed!  - Failed:     0, Passed:    46, Skipped:     2, Total:    48
+  ```
+  *(0 integration tests skipped in CI; all 5 container integration tests passed; 2 live LLM tests skipped as expected without external API key)*
 
 #### .NET Test Suite Breakdown
 - **Validation Tests (22 tests):** SKU max length, empty SKU rejection, positive price and cost requirements, non-negative quantities, reorder level constraints, valid foreign key GUID rules, stock adjustment delta validation.
@@ -482,7 +485,7 @@ Passed!  - Failed:     0, Passed:    41, Skipped:     7, Total:    48, Duration:
 - **Reports & Low-Stock Tests (6 tests):** Low-stock report filtering products strictly at or below threshold, negative threshold rejection, structured LLM summary 200 response, 502 Bad Gateway on malformed JSON, 502 on schema violations, 503 on external provider exceptions, and friendly empty-catalog messaging.
 - **Stock View & Controller Tests (2 tests):** Razor view returns valid ViewResult and form action / script references match `/api/stock/adjust`.
 - **Golden Evaluation Runner (1 test covering 10 scenarios):** Deterministic fact verification across 10 warehouse inventory scenarios.
-- **Integration Tests (5 tests):** `WebApplicationFactory` endpoint coverage (200, 404, 409, 400) and 20-client concurrent adjustment test against SQL Server container.
+- **Integration Tests (5 tests):** `WebApplicationFactory` endpoint coverage (200, 404, 409, 400) and 20-client concurrent adjustment test against SQL Server container. All 5 executed and passed in CI.
 
 ### 2. JavaScript Unit Tests (`Jest & jsdom`)
 Executed in `tests/js` via `npm test`:
@@ -515,8 +518,9 @@ Running 1 test using 1 worker
 
 ### 4. Code Coverage Baseline
 Measured using Coverlet in Cobertura XML format:
-- **Line Coverage Baseline:** 7.26% (336 covered / 4,623 valid lines across entire solution)
-- **CI Quality Gate:** Enforces line coverage $\ge$ 7.0%
+- **Line Coverage Baseline (Unit Tests Only):** 7.26% (336 covered / 4,623 valid lines)
+- **Line Coverage in CI (Including SQL Server Integration Tests):** 15.48% (716 covered / 4,625 valid lines)
+- **CI Quality Gate:** Enforces line coverage $\ge$ 7.0% (Passed)
 
 ---
 
