@@ -58,7 +58,8 @@ namespace InventoryManagementSystemAPI.Services.Implementations
                 }
                 catch (DbUpdateConcurrencyException) when (attempt < MaxRetries)
                 {
-                    // Retry on concurrency conflict up to MaxRetries
+                    // Exponential backoff with jitter to reduce contention across concurrent updates
+                    await Task.Delay(Random.Shared.Next(25, 75 * attempt));
                 }
             }
 

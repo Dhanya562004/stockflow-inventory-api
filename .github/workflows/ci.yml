@@ -84,7 +84,8 @@ jobs:
                     if failures:
                         f.write('#### Failed Tests:\n')
                         for r in failures:
-                            f.write(f'- `{r.get(\"testName\")}`\n')
+                            tname = r.get('testName')
+                            f.write(f'- {tname}\n')
                             for err in r.findall('.//t:Output/t:ErrorInfo/t:Message', ns):
                                 f.write(f'  > Error: {err.text}\n')
                     else:

@@ -1,4 +1,5 @@
 using InventoryManagementSystemAPI.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace InventoryManagementSystemAPI.Middleware
 {
@@ -32,6 +33,8 @@ namespace InventoryManagementSystemAPI.Middleware
                 DuplicateResourceException => StatusCodes.Status409Conflict,
 
                 InsufficientStockException => StatusCodes.Status409Conflict,
+
+                DbUpdateConcurrencyException => StatusCodes.Status409Conflict,
 
                 _ => StatusCodes.Status500InternalServerError
             };
