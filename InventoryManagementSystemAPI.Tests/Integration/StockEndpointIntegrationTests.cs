@@ -6,7 +6,6 @@ using InventoryManagementSystemAPI.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -23,11 +22,20 @@ namespace InventoryManagementSystemAPI.Tests.Integration
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
-            builder.ConfigureAppConfiguration((context, config) =>
+            builder.ConfigureServices(services =>
             {
-                config.AddInMemoryCollection(new Dictionary<string, string?>
+                var descriptors = services.Where(d =>
+                    d.ServiceType == typeof(DbContextOptions<AppDbContext>) ||
+                    d.ServiceType == typeof(DbContextOptions)).ToList();
+
+                foreach (var d in descriptors)
                 {
-                    ["ConnectionStrings:DefaultConnection"] = _connectionString
+                    services.Remove(d);
+                }
+
+                services.AddDbContext<AppDbContext>(options =>
+                {
+                    options.UseSqlServer(_connectionString);
                 });
             });
         }
