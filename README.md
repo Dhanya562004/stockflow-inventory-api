@@ -31,6 +31,7 @@ A production-inspired **Inventory Management System REST API and MVC Web Applica
 - [Database Seeding](#database-seeding)
 - [Getting Started](#getting-started)
 - [Test Results](#test-results)
+- [Verification](#verification)
 - [CI Pipeline](#ci-pipeline)
 - [Low-Stock SQL Query](#low-stock-sql-query)
 - [What I Learned](#what-i-learned)
@@ -462,25 +463,96 @@ https://localhost:7011/stock
 
 # Test Results
 
-All tests are implemented in the `InventoryManagementSystemAPI.Tests` project using xUnit, FluentValidation, and WebApplicationFactory:
+### 1. .NET Test Suite (`xUnit`)
+Executed with `dotnet test`:
 
 ```text
-Test run for InventoryManagementSystemAPI.Tests.dll (.NETCoreApp,Version=v8.0)
-VSTest version 17.11.1 (x64)
-
-Starting test execution, please wait...
-A total of 1 test files matched the specified pattern.
-
-Passed!  - Failed:     0, Passed:    34, Skipped:     5, Total:    39, Duration: 2.1 s - InventoryManagementSystemAPI.Tests.dll (net8.0)
+Passed!  - Failed:     0, Passed:    41, Skipped:     7, Total:    48, Duration: 703 ms - InventoryManagementSystemAPI.Tests.dll (net8.0)
 ```
 
-### Test Suite Breakdown
-- **Validation Tests (22 tests):** SKU length & requirements, positive prices, costs, quantities, reorder levels, foreign key GUID rules, stock adjustment delta rules.
+- **Total .NET Tests:** 48
+- **Passed:** 41
+- **Failed:** 0
+- **Skipped Locally:** 7 (5 container integration tests skipped when local SQL Server is unavailable; 2 live tests skipped when `LLM_API_KEY` is not set)
+
+#### .NET Test Suite Breakdown
+- **Validation Tests (22 tests):** SKU max length, empty SKU rejection, positive price and cost requirements, non-negative quantities, reorder level constraints, valid foreign key GUID rules, stock adjustment delta validation.
 - **Product Service Tests (6 tests):** Duplicate SKU prevention, duplicate barcode detection, retrieval, update, and deletion rules without database dependencies.
 - **Stock Adjustment Service Tests (6 tests):** Valid adjustments staying positive, adjustments hitting exactly zero, adjustments rejected due to negative balance, transient concurrency retry recovery, and exceeding retry limits (3 attempts).
-- **Reports Tests (2 tests):** Low-stock report filtering products strictly at or below threshold and rejecting negative threshold inputs.
-- **Stock View & Controller Tests (2 tests):** Razor view returns valid ViewResult and form action matches `POST /api/stock/adjust`.
-- **Integration Tests (5 tests, skipped on local host without active Docker daemon, run in CI):** WebApplicationFactory endpoint coverage (200, 404, 409, 400) and 20-client concurrent adjustment test against SQL Server container.
+- **Reports & Low-Stock Tests (6 tests):** Low-stock report filtering products strictly at or below threshold, negative threshold rejection, structured LLM summary 200 response, 502 Bad Gateway on malformed JSON, 502 on schema violations, 503 on external provider exceptions, and friendly empty-catalog messaging.
+- **Stock View & Controller Tests (2 tests):** Razor view returns valid ViewResult and form action / script references match `/api/stock/adjust`.
+- **Golden Evaluation Runner (1 test covering 10 scenarios):** Deterministic fact verification across 10 warehouse inventory scenarios.
+- **Integration Tests (5 tests):** `WebApplicationFactory` endpoint coverage (200, 404, 409, 400) and 20-client concurrent adjustment test against SQL Server container.
+
+### 2. JavaScript Unit Tests (`Jest & jsdom`)
+Executed in `tests/js` via `npm test`:
+
+```text
+PASS ./stock.test.js
+  Stock Management Frontend Unit Tests
+    ✓ 200 path updates the DOM with success message and new quantity (38 ms)
+    ✓ 400 response shows validation messages from the response body (13 ms)
+    ✓ 404 response shows "product not found" (11 ms)
+    ✓ 409 response shows "stock would go negative" (6 ms)
+    ✓ 500 server error shows a retry message (7 ms)
+    ✓ network exception shows a retry message (4 ms)
+    ✓ submit button is disabled while request is in flight and re-enabled afterwards (3 ms)
+    ✓ product list renders an empty state when there are no products (3 ms)
+    ✓ product list renders rows using createElement and textContent, and allows row selection (23 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       9 passed, 9 total
+```
+
+### 3. End-to-End Tests (`Playwright & Chromium`)
+Executed in `tests/js` via `npx playwright test` against running app on `http://localhost:5228`:
+
+```text
+Running 1 test using 1 worker
+  ok 1 [chromium] › e2e/stock.spec.js:4:5 › Stock Page E2E › opens /stock, submits an adjustment, and checks displayed quantity (1.3s)
+  1 passed (4.1s)
+```
+
+### 4. Code Coverage Baseline
+Measured using Coverlet in Cobertura XML format:
+- **Line Coverage Baseline:** 7.26% (336 covered / 4,623 valid lines across entire solution)
+- **CI Quality Gate:** Enforces line coverage $\ge$ 7.0%
+
+---
+
+# Verification
+
+Reviewers can independently verify each component using the exact commands below:
+
+### 1. Build and Run .NET Tests
+```bash
+dotnet restore
+dotnet build --configuration Release
+dotnet test --configuration Release
+```
+
+### 2. Measure Code Coverage
+```bash
+dotnet test --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults
+```
+
+### 3. Run JavaScript Unit Tests
+```bash
+cd tests/js
+npm test
+cd ../..
+```
+
+### 4. Run Playwright E2E Tests
+```bash
+# Terminal 1: Start the application
+dotnet run --urls "http://localhost:5228"
+
+# Terminal 2: Run Playwright test
+cd tests/js
+npx playwright test
+cd ../..
+```
 
 ---
 
