@@ -35,7 +35,7 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: Cache NuGet packages
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
@@ -144,7 +144,7 @@ jobs:
         node-version: 20
 
     - name: Cache npm packages
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ~/.npm
         key: ${{ runner.os }}-npm-${{ hashFiles('tests/js/package-lock.json') }}
@@ -178,7 +178,7 @@ jobs:
         node-version: 20
 
     - name: Cache NuGet packages
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
@@ -186,7 +186,7 @@ jobs:
           ${{ runner.os }}-nuget-
 
     - name: Cache npm packages
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ~/.npm
         key: ${{ runner.os }}-npm-${{ hashFiles('tests/js/package-lock.json') }}
