@@ -1,118 +1,120 @@
-# Azure App Service and Azure SQL Deployment Guide
+# Azure Free-Tier Deployment Guide (Strict ₹0 Budget)
 
-> **Deployment Status:** This application is **NOT** deployed to Azure. This document provides the prepared, verified deployment script template and manual runbook.
-
----
-
-## 1. Prerequisites
-- [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) (v2.50+)
-- .NET 8 SDK
-- Active Azure Subscription
+> **Deployment Status:** This application is **NOT** deployed to Azure. This document specifies the exact configuration, operational limitations, and verified scripts required to host the API on Azure using **ONLY free-tier resources (₹0 budget)**.
 
 ---
 
-## 2. Parameter Placeholders
-Replace the following placeholders before executing:
-- `<RESOURCE_GROUP>`: e.g. `rg-stockflow-prod-eastus`
-- `<LOCATION>`: e.g. `eastus`
-- `<APP_SERVICE_PLAN>`: e.g. `plan-stockflow-linux`
-- `<APP_NAME>`: e.g. `stockflow-inventory-api-prod` (globally unique)
-- `<SQL_SERVER_NAME>`: e.g. `sql-stockflow-prod` (globally unique)
-- `<SQL_DATABASE_NAME>`: e.g. `InventoryDB`
-- `<ADMIN_USER>`: e.g. `sqladmin`
-- `<ADMIN_PASSWORD>`: Secure strong password meeting Azure complexity requirements
+## 1. Budget & Free-Tier Resource Specification
+
+To comply with the strict **₹0 budget constraint**, the deployment architecture uses exclusively:
+
+| Component | Service & Tier | Free Limit & Auto-Pause Behavior | Budgeted Cost |
+| :--- | :--- | :--- | :--- |
+| **Hosting** | Azure App Service Linux **F1 (Free)** | 60 CPU minutes/day, 1 GB RAM, 1 GB Storage. Shuts down if daily CPU quota is reached. | **₹0** |
+| **Database** | Azure SQL Database **Serverless GeneralPurpose Free Offer** | 100,000 vCore-seconds/month (~55 hrs @ 0.5 vCore), 32 GB max storage. Auto-pauses after 60 min of inactivity. Configured with `--free-limit-exhaustion-behavior AutoPause` so it pauses if the monthly limit is reached instead of incurring charges. | **₹0** |
+| **Networking** | SQL Server Firewall Rule | Direct IP access for Azure internal services only (`0.0.0.0`). | **₹0** |
+| **SSL / HTTPS** | Default `*.azurewebsites.net` certificate | Included free on all App Service plans. | **₹0** |
+
+> [!CAUTION]
+> **Never select Basic, Standard, or Premium tiers.**
+> - App Service `B1` costs ~$13/month (~₹1,100/mo).
+> - Azure SQL `Basic` DTU tier costs ~$4.99/month (~₹420/mo).
+> - Never assume Azure trial credits satisfy a ₹0 budget requirement.
 
 ---
 
-## 3. Azure CLI Provisioning Commands
+## 2. Incompatibilities, Subscription Constraints & Limitations
 
-### Step 3.1: Create Resource Group
+Before deploying, verify these technical constraints:
+
+1. **Single Free Database Limit per Subscription:**
+   - Microsoft Azure permits **exactly one lifetime free Azure SQL database per subscription**.
+   - If your Azure subscription has already claimed a free SQL database, creating another one with `--use-free-limit true` will fail.
+   - *Check in Azure Portal:* Search for **Azure SQL**, filter by free offer, or run `az sql db list` to inspect existing databases.
+
+2. **Auto-Pause Cold Starts:**
+   - The Serverless database auto-pauses after 60 minutes of inactivity to conserve free vCore seconds.
+   - The first HTTP request after pause triggers a wake-up taking **30 to 60 seconds**. Clients or frontend applications must allow appropriate timeouts.
+
+3. **Free Monthly Quota Exhaustion:**
+   - If the database exhausts 100,000 vCore-seconds in a calendar month, the database **auto-pauses until the first day of the following calendar month**.
+   - During this period, all database queries will fail, preventing unexpected charges.
+
+4. **App Service F1 Daily Quota:**
+   - 60 CPU minutes per 24-hour UTC day.
+   - If exceeded, the App Service displays an HTTP 403 / 503 Quota Exceeded error until the quota resets at 00:00 UTC.
+
+5. **Always On is Disabled:**
+   - `Always On` is not supported on F1. The web worker will go to sleep after ~20 minutes of inactivity.
+
+---
+
+## 3. Verified Script Artifacts
+
+The repository includes two scripts in the `scripts/` directory:
+
+1. **[`scripts/deploy-azure.sh`](../scripts/deploy-azure.sh):**
+   - Implements the complete provisioning workflow strictly enforcing `--sku F1` and `--use-free-limit true --free-limit-exhaustion-behavior AutoPause`.
+   - Packages and deploys the .NET 8 application.
+   - Validated syntax: `bash -n scripts/deploy-azure.sh` (Passed).
+
+2. **[`scripts/verify-azure.sh`](../scripts/verify-azure.sh):**
+   - Tests the live deployed URL: OpenAPI/Swagger (`/swagger/v1/swagger.json`), Razor stock view (`/stock`), and Products API (`/api/products`).
+   - Fails cleanly with exit code 1 if `API_URL` is unset or unreachable.
+   - Validated syntax: `bash -n scripts/verify-azure.sh` (Passed).
+
+---
+
+## 4. Manual Deployment Runbook (For Subscription Owner)
+
+Because Azure CLI is not installed in this execution environment and interactive Microsoft Entra ID authentication (`az login`) requires operator browser confirmation, follow these manual steps to deploy:
+
+### Step 4.1: Login and Select Target Subscription
 ```bash
-az group create \
-  --name <RESOURCE_GROUP> \
-  --location <LOCATION>
+# 1. Authenticate to Azure
+az login
+
+# 2. List your subscriptions and select the one intended for free hosting
+az account list --output table
+az account set --subscription "<YOUR_SUBSCRIPTION_ID>"
+
+# 3. Check if your subscription already has an existing free SQL DB
+az sql db list --query "[?useFreeLimit==\`true\`].{Name:name, Server:serverName}" -o table
 ```
 
-### Step 3.2: Provision Azure SQL Logical Server & Database
+### Step 4.2: Export Required Environment Variables
 ```bash
-# Create Logical Server
-az sql server create \
-  --name <SQL_SERVER_NAME> \
-  --resource-group <RESOURCE_GROUP> \
-  --location <LOCATION> \
-  --admin-user <ADMIN_USER> \
-  --admin-password '<ADMIN_PASSWORD>'
-
-# Configure Firewall Rule to Allow Azure Services
-az sql server firewall-rule create \
-  --resource-group <RESOURCE_GROUP> \
-  --server <SQL_SERVER_NAME> \
-  --name AllowAllWindowsAzureIps \
-  --start-ip-address 0.0.0.0 \
-  --end-ip-address 0.0.0.0
-
-# Create SQL Database
-az sql db create \
-  --resource-group <RESOURCE_GROUP> \
-  --server <SQL_SERVER_NAME> \
-  --name <SQL_DATABASE_NAME> \
-  --service-objective Basic
+export RESOURCE_GROUP="rg-stockflow-free"
+export LOCATION="eastus"                      # Ensure F1 Linux is available in chosen region
+export APP_SERVICE_PLAN="plan-stockflow-free"
+export APP_NAME="stockflow-api-$RANDOM"       # Must be globally unique
+export SQL_SERVER_NAME="sql-stockflow-$RANDOM"# Must be globally unique
+export SQL_DATABASE_NAME="InventoryDB"
+export ADMIN_USER="sqladmin"
+export ADMIN_PASSWORD="YourStrongPassword123!"# Must meet Azure SQL complexity rules
 ```
 
-### Step 3.3: Provision Linux App Service Plan & Web App (.NET 8)
+### Step 4.3: Execute Free Deployment
 ```bash
-# Create Linux App Service Plan
-az appservice plan create \
-  --name <APP_SERVICE_PLAN> \
-  --resource-group <RESOURCE_GROUP> \
-  --is-linux \
-  --sku B1
-
-# Create Web App with .NET 8 Runtime
-az webapp create \
-  --name <APP_NAME> \
-  --resource-group <RESOURCE_GROUP> \
-  --plan <APP_SERVICE_PLAN> \
-  --runtime "DOTNETCORE:8.0"
+chmod +x scripts/deploy-azure.sh scripts/verify-azure.sh
+./scripts/deploy-azure.sh
 ```
 
-### Step 3.4: Configure Connection String & Environment Settings
+### Step 4.4: Run Live Verification
 ```bash
-az webapp config connection-string set \
-  --resource-group <RESOURCE_GROUP> \
-  --name <APP_NAME> \
-  --connection-string-type SQLAzure \
-  --settings DefaultConnection="Server=tcp:<SQL_SERVER_NAME>.database.windows.net,1433;Initial Catalog=<SQL_DATABASE_NAME>;Persist Security Info=False;User ID=<ADMIN_USER>;Password='<ADMIN_PASSWORD>';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
-
-az webapp config appsettings set \
-  --resource-group <RESOURCE_GROUP> \
-  --name <APP_NAME> \
-  --settings ASPNETCORE_ENVIRONMENT="Production" JWT__Key="<SUPER_SECRET_PRODUCTION_KEY>" JWT__Issuer="StockFlowAPI" JWT__Audience="StockFlowAPI"
-```
-
-### Step 3.5: Publish and Deploy Application
-```bash
-# Build & Publish
-dotnet publish -c Release -o ./publish
-
-# Create Deployment Zip Archive
-cd ./publish
-zip -r ../deploy.zip .
-cd ..
-
-# Deploy ZIP Package to App Service
-az webapp deploy \
-  --resource-group <RESOURCE_GROUP> \
-  --name <APP_NAME> \
-  --src-path ./deploy.zip \
-  --type zip
+./scripts/verify-azure.sh "https://${APP_NAME}.azurewebsites.net"
 ```
 
 ---
 
-## 4. Manual Steps Not Performable in This Environment
-The following actions cannot be executed automatically within this agent environment and must be performed manually by an operator with Azure subscription credentials:
-1. **Interactive Login:** Running `az login` to authenticate against Microsoft Entra ID.
-2. **Subscription Selection:** Selecting the target billing subscription via `az account set --subscription <SUBSCRIPTION_ID>`.
-3. **Provisioning Live Infrastructure:** Running billing-associated resource creation commands.
-4. **Credential Secrets Injection:** Injecting real production database passwords and signing keys into Azure Key Vault or environment configurations.
+## 5. Alternatives If Free Azure SQL Offer Is Unavailable
+
+If your subscription has already utilized its single free Azure SQL Database, the following ₹0 options are available:
+
+1. **SQLite Embedded Provider:**
+   - Replace `Microsoft.EntityFrameworkCore.SqlServer` with `Microsoft.EntityFrameworkCore.Sqlite` in `Program.cs`.
+   - Store the `.db` file in the App Service persistent `/home` directory.
+   - **Cost:** ₹0 (uses existing App Service F1 storage; no external database service required).
+
+2. **External Free SQL / Container Service:**
+   - Connect the App Service to an external free development database provider (e.g., Neon, Supabase, or Render Free Tier).
