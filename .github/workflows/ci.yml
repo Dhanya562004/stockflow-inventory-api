@@ -57,24 +57,36 @@ jobs:
           --results-directory ./TestResults \
           --collect:"XPlat Code Coverage"
 
-    - name: Print test failure details if tests failed
-      if: failure()
+    - name: Report test details to step summary
+      if: always()
       run: |
         python3 -c "
         import xml.etree.ElementTree as ET
-        import glob
+        import glob, os
 
-        for trx in glob.glob('./TestResults/**/*.trx', recursive=True):
-            tree = ET.parse(trx)
-            ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
-            for r in tree.getroot().findall('.//t:UnitTestResult', ns):
-                if r.get('outcome') == 'Failed':
-                    print('================ FAILED TEST ================')
-                    print('Test:', r.get('testName'))
-                    for err in r.findall('.//t:Output/t:ErrorInfo/t:Message', ns):
-                        print('Error:', err.text)
-                    for st in r.findall('.//t:Output/t:ErrorInfo/t:StackTrace', ns):
-                        print('Stack:\n', st.text[:1000])
+        summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
+        if summary_file:
+            with open(summary_file, 'a') as f:
+                for trx in glob.glob('./TestResults/**/*.trx', recursive=True):
+                    tree = ET.parse(trx)
+                    ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+                    f.write('### .NET Test Execution Summary\n\n')
+                    counters = tree.getroot().find('.//t:ResultSummary/t:Counters', ns)
+                    if counters is not None:
+                        f.write(f'- **Total:** {counters.get(\"total\")}\n')
+                        f.write(f'- **Passed:** {counters.get(\"passed\")}\n')
+                        f.write(f'- **Failed:** {counters.get(\"failed\")}\n')
+                        f.write(f'- **Skipped:** {counters.get(\"notExecuted\", counters.get(\"skipped\"))}\n\n')
+
+                    failures = [r for r in tree.getroot().findall('.//t:UnitTestResult', ns) if r.get('outcome') == 'Failed']
+                    if failures:
+                        f.write('#### Failed Tests:\n')
+                        for r in failures:
+                            f.write(f'- `{r.get(\"testName\")}`\n')
+                            for err in r.findall('.//t:Output/t:ErrorInfo/t:Message', ns):
+                                f.write(f'  > Error: {err.text}\n')
+                    else:
+                        f.write('All tests passed!\n')
         "
 
     # In CI, a dedicated SQL Server 2022 service container is provided and configured.

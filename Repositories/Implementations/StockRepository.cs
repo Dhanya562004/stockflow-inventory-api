@@ -31,7 +31,13 @@ namespace InventoryManagementSystemAPI.Repositories.Implementations
 
         public async Task UpdateAsync(Product product)
         {
-            _context.Products.Update(product);
+            var entry = _context.Entry(product);
+            if (entry.State == EntityState.Detached)
+            {
+                _context.Products.Attach(product);
+                entry.State = EntityState.Modified;
+            }
+            entry.Property(p => p.RowVersion).IsModified = false;
             await _context.SaveChangesAsync();
         }
 
