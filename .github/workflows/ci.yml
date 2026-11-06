@@ -50,7 +50,7 @@ jobs:
 
     - name: Run tests with Cobertura code coverage
       env:
-        SQL_SERVER_TEST_CONNECTION_STRING: "Server=localhost,1433;Database=InventoryTestDB;User Id=sa;Password=Password123!;TrustServerCertificate=True;"
+        SQL_SERVER_TEST_CONNECTION_STRING: "Server=127.0.0.1,1433;Database=InventoryTestDB;User Id=sa;Password=Password123!;TrustServerCertificate=True;"
       run: |
         dotnet test --no-build --configuration Release \
           --logger "trx;LogFileName=test_results.trx" \

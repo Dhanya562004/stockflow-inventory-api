@@ -49,6 +49,45 @@ namespace InventoryManagementSystemAPI.Tests.Integration
             Skip.If(string.IsNullOrWhiteSpace(conn), "SQL_SERVER_TEST_CONNECTION_STRING is not configured; integration tests against SQL Server container did not run on this host.");
         }
 
+        private static async Task<Guid> SeedProductAsync(CustomWebApplicationFactory factory, int initialQuantity)
+        {
+            var productId = Guid.NewGuid();
+            using var scope = factory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            await db.Database.EnsureCreatedAsync();
+
+            var category = new Category 
+            { 
+                Id = Guid.NewGuid(), 
+                Name = "Test Cat " + Guid.NewGuid().ToString("N")[..8] 
+            };
+            var supplier = new Supplier 
+            { 
+                Id = Guid.NewGuid(), 
+                CompanyName = "Test Sup " + Guid.NewGuid().ToString("N")[..8], 
+                Email = "sup" + Guid.NewGuid().ToString("N")[..8] + "@example.com" 
+            };
+
+            db.Categories.Add(category);
+            db.Suppliers.Add(supplier);
+
+            var product = new Product
+            {
+                Id = productId,
+                Name = "Integration Test Item " + Guid.NewGuid().ToString("N")[..8],
+                SKU = "INT-" + Guid.NewGuid().ToString("N")[..8],
+                Barcode = Guid.NewGuid().ToString("N")[..12],
+                QuantityInStock = initialQuantity,
+                CategoryId = category.Id,
+                SupplierId = supplier.Id
+            };
+
+            db.Products.Add(product);
+            await db.SaveChangesAsync();
+
+            return productId;
+        }
+
         [SkippableFact]
         public async Task PostAdjust_WhenValidAdjustment_Returns200WithNewQuantity()
         {
@@ -56,23 +95,7 @@ namespace InventoryManagementSystemAPI.Tests.Integration
             var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
             var client = factory.CreateClient();
 
-            var productId = Guid.NewGuid();
-            using (var scope = factory.Services.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                await db.Database.EnsureCreatedAsync();
-
-                var product = new Product
-                {
-                    Id = productId,
-                    Name = "Valid Adjustment Test Item",
-                    SKU = "VAL-01",
-                    Barcode = "111111111",
-                    QuantityInStock = 10
-                };
-                db.Products.Add(product);
-                await db.SaveChangesAsync();
-            }
+            var productId = await SeedProductAsync(factory, 10);
 
             var response = await client.PostAsJsonAsync("/api/stock/adjust", new AdjustStockDto
             {
@@ -112,23 +135,7 @@ namespace InventoryManagementSystemAPI.Tests.Integration
             var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
             var client = factory.CreateClient();
 
-            var productId = Guid.NewGuid();
-            using (var scope = factory.Services.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                await db.Database.EnsureCreatedAsync();
-
-                var product = new Product
-                {
-                    Id = productId,
-                    Name = "Negative Test Item",
-                    SKU = "NEG-01",
-                    Barcode = "222222222",
-                    QuantityInStock = 5
-                };
-                db.Products.Add(product);
-                await db.SaveChangesAsync();
-            }
+            var productId = await SeedProductAsync(factory, 5);
 
             var response = await client.PostAsJsonAsync("/api/stock/adjust", new AdjustStockDto
             {
@@ -163,23 +170,7 @@ namespace InventoryManagementSystemAPI.Tests.Integration
             var factory = new CustomWebApplicationFactory(connectionString);
             var client = factory.CreateClient();
 
-            var productId = Guid.NewGuid();
-            using (var scope = factory.Services.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                await db.Database.EnsureCreatedAsync();
-
-                var product = new Product
-                {
-                    Id = productId,
-                    Name = "Concurrency Test Item",
-                    SKU = "CONC-01",
-                    Barcode = "999999999",
-                    QuantityInStock = 10
-                };
-                db.Products.Add(product);
-                await db.SaveChangesAsync();
-            }
+            var productId = await SeedProductAsync(factory, 10);
 
             var tasks = Enumerable.Range(0, 20).Select(_ =>
                 client.PostAsJsonAsync("/api/stock/adjust", new AdjustStockDto
