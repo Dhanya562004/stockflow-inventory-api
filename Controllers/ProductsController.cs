@@ -1,4 +1,4 @@
-﻿using InventoryManagementSystemAPI.DTOs.Product;
+using InventoryManagementSystemAPI.DTOs.Product;
 using InventoryManagementSystemAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -18,7 +18,7 @@ namespace InventoryManagementSystemAPI.Controllers
             _service = service;
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> GetAll() 
         {

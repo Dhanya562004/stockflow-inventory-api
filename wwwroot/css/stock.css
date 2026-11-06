@@ -2,12 +2,18 @@
 :root {
     --primary-color: #0b57d0;
     --primary-hover: #0842a0;
+    --primary-disabled: #80a7e8;
     --success-bg: #e6f4ea;
     --success-text: #137333;
+    --success-border: #ceead6;
     --error-bg: #fce8e6;
     --error-text: #c5221f;
+    --error-border: #fad2cf;
     --border-color: #dadce0;
     --text-color: #202124;
+    --muted-color: #5f6368;
+    --card-bg: #ffffff;
+    --focus-ring: #1a73e8;
 }
 
 body {
@@ -15,24 +21,33 @@ body {
     color: var(--text-color);
     background-color: #f8f9fa;
     margin: 0;
-    padding: 2rem;
+    padding: 2rem 1rem;
     line-height: 1.5;
 }
 
 .stock-container {
-    max-width: 540px;
-    margin: 2rem auto;
-    background: #ffffff;
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--card-bg);
     padding: 2rem;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(60, 64, 67, 0.15), 0 1px 2px rgba(60, 64, 67, 0.3);
 }
 
 h1 {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     margin-top: 0;
     margin-bottom: 1.5rem;
     color: #1f1f1f;
+}
+
+h2 {
+    font-size: 1.35rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    color: #1f1f1f;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
 }
 
 .form-group {
@@ -47,7 +62,7 @@ label {
 
 .help-text {
     font-size: 0.85rem;
-    color: #5f6368;
+    color: var(--muted-color);
     margin-top: 0.25rem;
 }
 
@@ -62,10 +77,10 @@ input[type="number"] {
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
-input:focus {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 1px;
-    border-color: var(--primary-color);
+input:focus,
+button:focus {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
 }
 
 button[type="submit"] {
@@ -80,13 +95,35 @@ button[type="submit"] {
     transition: background-color 0.15s ease-in-out;
 }
 
-button[type="submit"]:hover {
+button[type="submit"]:hover:not(:disabled) {
     background-color: var(--primary-hover);
 }
 
-button[type="submit"]:focus {
-    outline: 3px solid #aecbfa;
-    outline-offset: 2px;
+button[type="submit"]:disabled {
+    background-color: var(--primary-disabled);
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.select-btn {
+    background-color: #f1f3f4;
+    color: #202124;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.select-btn:hover {
+    background-color: #e8eaed;
+}
+
+.select-btn:focus {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
 }
 
 .status-box {
@@ -101,18 +138,58 @@ button[type="submit"]:focus {
     display: block;
     background-color: var(--error-bg);
     color: var(--error-text);
-    border: 1px solid #fad2cf;
+    border: 1px solid var(--error-border);
 }
 
 .status-box.success {
     display: block;
     background-color: var(--success-bg);
     color: var(--success-text);
-    border: 1px solid #ceead6;
+    border: 1px solid var(--success-border);
 }
 
 .quantity-display {
     margin-top: 1rem;
     font-size: 1.15rem;
     font-weight: bold;
+    color: var(--text-color);
+}
+
+/* Product Catalog Table */
+.catalog-section {
+    margin-top: 2rem;
+}
+
+.product-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 0.95rem;
+}
+
+.product-table th,
+.product-table td {
+    padding: 0.75rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.product-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #3c4043;
+}
+
+.product-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.empty-state {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--muted-color);
+    font-size: 1rem;
+    border: 1px dashed var(--border-color);
+    border-radius: 4px;
+    margin-top: 1rem;
 }

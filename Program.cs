@@ -192,15 +192,23 @@ namespace InventoryManagementSystemAPI
             var app = builder.Build();
 
             // Seeders 
-            using (var scope = app.Services.CreateScope()) 
+            try
             {
-                var services = scope.ServiceProvider;
+                using (var scope = app.Services.CreateScope()) 
+                {
+                    var services = scope.ServiceProvider;
 
-                var IdentityDataSeeder = services.GetRequiredService<IdentityDataSeeder>();
-                var appDataSeeder = services.GetRequiredService<AppDataSeeder>();
+                    var IdentityDataSeeder = services.GetRequiredService<IdentityDataSeeder>();
+                    var appDataSeeder = services.GetRequiredService<AppDataSeeder>();
 
-                await IdentityDataSeeder.SeedAsync();
-                await appDataSeeder.SeedAsync();
+                    await IdentityDataSeeder.SeedAsync();
+                    await appDataSeeder.SeedAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                var logger = app.Services.GetService<ILogger<Program>>();
+                logger?.LogWarning(ex, "Database seeding could not be executed on startup. Continuing application startup.");
             }
 
             // Configure the HTTP request pipeline.

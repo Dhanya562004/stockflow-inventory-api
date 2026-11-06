@@ -29,89 +29,27 @@
             <button type="submit" id="submitBtn">Adjust Stock</button>
         </form>
 
-        <div id="statusMessage" class="status-box" role="alert" aria-live="polite"></div>
-        <div id="quantityDisplay" class="quantity-display" aria-live="polite"></div>
+        <div id="statusMessage" class="status-box" role="status" aria-live="polite"></div>
+        <div id="quantityDisplay" class="quantity-display" role="status" aria-live="polite"></div>
+
+        <section class="catalog-section" aria-labelledby="catalogHeading">
+            <h2 id="catalogHeading">Product Catalog</h2>
+            <div id="emptyState" class="empty-state" role="status" aria-live="polite" style="display: none;">No products available.</div>
+            <table id="productTable" class="product-table" aria-label="Product Catalog" style="display: none;">
+                <thead>
+                    <tr>
+                        <th scope="col">Product Name</th>
+                        <th scope="col">SKU</th>
+                        <th scope="col">Current Stock</th>
+                        <th scope="col">Product ID</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="productTableBody"></tbody>
+            </table>
+        </section>
     </main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const form = document.getElementById('stockAdjustmentForm');
-            const productIdInput = document.getElementById('productId');
-            const deltaInput = document.getElementById('delta');
-            const statusMessage = document.getElementById('statusMessage');
-            const quantityDisplay = document.getElementById('quantityDisplay');
-            const submitBtn = document.getElementById('submitBtn');
-
-            form.addEventListener('submit', async function (event) {
-                event.preventDefault();
-
-                statusMessage.className = 'status-box';
-                statusMessage.textContent = '';
-                quantityDisplay.textContent = '';
-
-                const productId = productIdInput.value.trim();
-                const deltaValue = parseInt(deltaInput.value, 10);
-
-                if (!productId) {
-                    statusMessage.className = 'status-box error';
-                    statusMessage.textContent = 'Please enter a valid Product ID.';
-                    return;
-                }
-
-                if (isNaN(deltaValue) || deltaValue === 0) {
-                    statusMessage.className = 'status-box error';
-                    statusMessage.textContent = 'Please enter a non-zero adjustment amount (delta).';
-                    return;
-                }
-
-                submitBtn.disabled = true;
-
-                try {
-                    const response = await fetch('/api/stock/adjust', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            productId: productId,
-                            delta: deltaValue
-                        })
-                    });
-
-                    let data = null;
-                    try {
-                        data = await response.json();
-                    } catch (e) {
-                        data = null;
-                    }
-
-                    if (response.status === 200) {
-                        statusMessage.className = 'status-box success';
-                        statusMessage.textContent = data && data.message ? data.message : 'Stock adjusted successfully.';
-                        const newQuantity = data && data.quantity !== undefined ? data.quantity : 'N/A';
-                        quantityDisplay.textContent = 'Updated Quantity: ' + newQuantity;
-                    } else if (response.status === 409) {
-                        statusMessage.className = 'status-box error';
-                        statusMessage.textContent = data && data.message ? data.message : 'Adjustment rejected: resulting stock cannot be negative.';
-                    } else if (response.status === 404) {
-                        statusMessage.className = 'status-box error';
-                        statusMessage.textContent = data && data.message ? data.message : 'Product not found.';
-                    } else if (response.status === 400) {
-                        statusMessage.className = 'status-box error';
-                        statusMessage.textContent = data && data.message ? data.message : 'Validation failed. Please verify the input values.';
-                    } else {
-                        statusMessage.className = 'status-box error';
-                        statusMessage.textContent = data && data.message ? data.message : 'An error occurred (' + response.status + ').';
-                    }
-                } catch (err) {
-                    statusMessage.className = 'status-box error';
-                    statusMessage.textContent = 'Network or server communication failure.';
-                } finally {
-                    submitBtn.disabled = false;
-                }
-            });
-        });
-    </script>
+    <script src="/js/stock.js"></script>
 </body>
 </html>

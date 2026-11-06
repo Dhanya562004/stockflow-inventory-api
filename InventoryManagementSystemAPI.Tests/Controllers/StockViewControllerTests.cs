@@ -23,30 +23,41 @@ namespace InventoryManagementSystemAPI.Tests.Controllers
         [Fact]
         public void StockView_FormEndpointUrlMatchesApiRoute()
         {
-            // Traverse upwards from BaseDirectory to find Views/Stock/Index.cshtml
+            // Traverse upwards from BaseDirectory to find Views/Stock/Index.cshtml and wwwroot/js/stock.js
             var dir = new DirectoryInfo(AppContext.BaseDirectory);
-            string? foundPath = null;
+            string? foundViewPath = null;
+            string? foundJsPath = null;
 
             while (dir != null)
             {
-                var candidate = Path.Combine(dir.FullName, "Views", "Stock", "Index.cshtml");
-                if (File.Exists(candidate))
+                var candidateView = Path.Combine(dir.FullName, "Views", "Stock", "Index.cshtml");
+                var candidateJs = Path.Combine(dir.FullName, "wwwroot", "js", "stock.js");
+
+                if (File.Exists(candidateView) && File.Exists(candidateJs))
                 {
-                    foundPath = candidate;
+                    foundViewPath = candidateView;
+                    foundJsPath = candidateJs;
                     break;
                 }
                 dir = dir.Parent;
             }
 
-            Assert.NotNull(foundPath);
-            var content = File.ReadAllText(foundPath);
+            Assert.NotNull(foundViewPath);
+            Assert.NotNull(foundJsPath);
 
+            var viewContent = File.ReadAllText(foundViewPath);
+            Assert.Contains("/js/stock.js", viewContent);
+            Assert.Contains("id=\"stockAdjustmentForm\"", viewContent);
+            Assert.Contains("id=\"productTable\"", viewContent);
+            Assert.Contains("id=\"emptyState\"", viewContent);
+
+            var jsContent = File.ReadAllText(foundJsPath);
             // Assert that the plain JavaScript fetch calls the exact API endpoint /api/stock/adjust
-            Assert.Contains("fetch('/api/stock/adjust'", content);
-            Assert.Contains("method: 'POST'", content);
+            Assert.Contains("fetch('/api/stock/adjust'", jsContent);
+            Assert.Contains("method: 'POST'", jsContent);
             // Assert that textContent is used rather than innerHTML
-            Assert.Contains("textContent", content);
-            Assert.DoesNotContain("innerHTML", content);
+            Assert.Contains("textContent", jsContent);
+            Assert.DoesNotContain("innerHTML", jsContent);
         }
 
         private class StubStockService : IStockService
