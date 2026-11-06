@@ -14,7 +14,6 @@ namespace InventoryManagementSystemAPI.Tests.Controllers
         [Fact]
         public async Task GetLowStock_WhenCalledWithThreshold_ReturnsOnlyProductsAtOrBelowThreshold()
         {
-            // Arrange products with various stock levels: 3, 10, 15, 50
             var prod1 = new Product { Id = Guid.NewGuid(), Name = "Low Item 1", SKU = "LOW-01", QuantityInStock = 3, ReorderLevel = 5 };
             var prod2 = new Product { Id = Guid.NewGuid(), Name = "Threshold Item", SKU = "MID-01", QuantityInStock = 10, ReorderLevel = 10 };
             var prod3 = new Product { Id = Guid.NewGuid(), Name = "High Item 1", SKU = "HIGH-01", QuantityInStock = 15, ReorderLevel = 10 };
@@ -24,10 +23,8 @@ namespace InventoryManagementSystemAPI.Tests.Controllers
             var service = new ReportService(fakeRepo);
             var controller = new ReportsController(service);
 
-            // Act: request threshold of 10
             var actionResult = await controller.GetLowStock(threshold: 10);
 
-            // Assert: OkObjectResult with only products with QuantityInStock <= 10
             var okResult = Assert.IsType<OkObjectResult>(actionResult);
             var report = Assert.IsAssignableFrom<IEnumerable<LowStockReportDto>>(okResult.Value);
             var reportList = report.ToList();
@@ -52,40 +49,73 @@ namespace InventoryManagementSystemAPI.Tests.Controllers
         }
 
         [Fact]
-        public async Task GetLowStockSummary_WhenCalledWithThreshold_ReturnsLlmSummary()
+        public async Task GetLowStockSummary_WhenCalledWithValidSchema_Returns200WithStructuredAnalysis()
         {
-            // Arrange
             var prod = new Product { Id = Guid.NewGuid(), Name = "Low Item", SKU = "LOW-99", QuantityInStock = 2, ReorderLevel = 10 };
             var fakeRepo = new FakeReportRepository(new[] { prod });
             var service = new ReportService(fakeRepo);
-            var fakeLlm = new FakeLlmClient("Reorder recommendation: purchase 20 units of LOW-99 immediately.");
+
+            var validJson = "{\"summary\": \"Critical shortage for LOW-99.\", \"items\": [\"LOW-99\"], \"recommendedAction\": \"Order 50 units immediately.\" }";
+            var fakeLlm = new FakeLlmClient(validJson);
             var controller = new ReportsController(service, fakeLlm);
 
-            // Act
             var actionResult = await controller.GetLowStockSummary(threshold: 5);
 
-            // Assert
             var okResult = Assert.IsType<OkObjectResult>(actionResult);
             var response = Assert.IsType<LowStockSummaryResponseDto>(okResult.Value);
             Assert.Equal(5, response.Threshold);
             Assert.Equal(1, response.ItemCount);
-            Assert.Equal("Reorder recommendation: purchase 20 units of LOW-99 immediately.", response.Summary);
+            Assert.Equal("Critical shortage for LOW-99.", response.Summary);
+            Assert.Equal("Order 50 units immediately.", response.Analysis.RecommendedAction);
+            Assert.Contains("LOW-99", response.Analysis.Items);
+        }
+
+        [Fact]
+        public async Task GetLowStockSummary_WhenLlmReturnsInvalidJson_Returns502BadGateway()
+        {
+            var prod = new Product { Id = Guid.NewGuid(), Name = "Low Item", SKU = "LOW-99", QuantityInStock = 2, ReorderLevel = 10 };
+            var fakeRepo = new FakeReportRepository(new[] { prod });
+            var service = new ReportService(fakeRepo);
+
+            // Plain text output without JSON structure
+            var fakeLlm = new FakeLlmClient("Here is a summary: LOW-99 is low in stock.");
+            var controller = new ReportsController(service, fakeLlm);
+
+            var actionResult = await controller.GetLowStockSummary(threshold: 5);
+
+            var statusResult = Assert.IsType<ObjectResult>(actionResult);
+            Assert.Equal(StatusCodes.Status502BadGateway, statusResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetLowStockSummary_WhenLlmOutputViolatesSchema_Returns502BadGateway()
+        {
+            var prod = new Product { Id = Guid.NewGuid(), Name = "Low Item", SKU = "LOW-99", QuantityInStock = 2, ReorderLevel = 10 };
+            var fakeRepo = new FakeReportRepository(new[] { prod });
+            var service = new ReportService(fakeRepo);
+
+            // Missing required recommendedAction
+            var missingFieldJson = "{\"summary\": \"Low stock summary.\", \"items\": [\"LOW-99\"] }";
+            var fakeLlm = new FakeLlmClient(missingFieldJson);
+            var controller = new ReportsController(service, fakeLlm);
+
+            var actionResult = await controller.GetLowStockSummary(threshold: 5);
+
+            var statusResult = Assert.IsType<ObjectResult>(actionResult);
+            Assert.Equal(StatusCodes.Status502BadGateway, statusResult.StatusCode);
         }
 
         [Fact]
         public async Task GetLowStockSummary_WhenLlmThrowsException_Returns503ServiceUnavailable()
         {
-            // Arrange
             var prod = new Product { Id = Guid.NewGuid(), Name = "Low Item", SKU = "LOW-99", QuantityInStock = 2, ReorderLevel = 10 };
             var fakeRepo = new FakeReportRepository(new[] { prod });
             var service = new ReportService(fakeRepo);
             var fakeLlm = new FakeLlmClient(new HttpRequestException("External API network failure"));
             var controller = new ReportsController(service, fakeLlm);
 
-            // Act
             var actionResult = await controller.GetLowStockSummary(threshold: 5);
 
-            // Assert: 503 Service Unavailable
             var statusResult = Assert.IsType<ObjectResult>(actionResult);
             Assert.Equal(StatusCodes.Status503ServiceUnavailable, statusResult.StatusCode);
         }
@@ -95,7 +125,7 @@ namespace InventoryManagementSystemAPI.Tests.Controllers
         {
             var fakeRepo = new FakeReportRepository();
             var service = new ReportService(fakeRepo);
-            var fakeLlm = new FakeLlmClient("summary");
+            var fakeLlm = new FakeLlmClient("{}");
             var controller = new ReportsController(service, fakeLlm);
 
             var actionResult = await controller.GetLowStockSummary(threshold: -5);

@@ -52,3 +52,4 @@ test.describe('Stock Page E2E', () => {
         await expect(page.locator('#quantityDisplay')).toHaveText('Updated Quantity: 25');
     });
 });
+

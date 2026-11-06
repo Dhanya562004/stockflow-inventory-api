@@ -1,0 +1,145 @@
+[
+  {
+    "id": "scenario-01",
+    "name": "Single critically low product",
+    "threshold": 5,
+    "inventory": [
+      { "id": "10000000-0000-0000-0000-000000000001", "name": "USB Flash Drive", "sku": "SKU-CRIT-01", "totalStock": 1, "reorderLevel": 10 }
+    ],
+    "expectedFacts": {
+      "itemCount": 1,
+      "lowestStockSku": "SKU-CRIT-01",
+      "expectedSkus": ["SKU-CRIT-01"]
+    }
+  },
+  {
+    "id": "scenario-02",
+    "name": "Multiple low items with identical stock",
+    "threshold": 5,
+    "inventory": [
+      { "id": "20000000-0000-0000-0000-000000000001", "name": "Keyboard A", "sku": "SKU-KB-A", "totalStock": 3, "reorderLevel": 15 },
+      { "id": "20000000-0000-0000-0000-000000000002", "name": "Keyboard B", "sku": "SKU-KB-B", "totalStock": 3, "reorderLevel": 15 }
+    ],
+    "expectedFacts": {
+      "itemCount": 2,
+      "lowestStockSku": "SKU-KB-A",
+      "expectedSkus": ["SKU-KB-A", "SKU-KB-B"]
+    }
+  },
+  {
+    "id": "scenario-03",
+    "name": "Zero stock out product",
+    "threshold": 10,
+    "inventory": [
+      { "id": "30000000-0000-0000-0000-000000000001", "name": "4K Webcam", "sku": "SKU-OUT-00", "totalStock": 0, "reorderLevel": 20 }
+    ],
+    "expectedFacts": {
+      "itemCount": 1,
+      "lowestStockSku": "SKU-OUT-00",
+      "expectedSkus": ["SKU-OUT-00"]
+    }
+  },
+  {
+    "id": "scenario-04",
+    "name": "Multi-item hierarchy with distinct lowest",
+    "threshold": 10,
+    "inventory": [
+      { "id": "40000000-0000-0000-0000-000000000001", "name": "Monitor Stand", "sku": "SKU-MIN-02", "totalStock": 2, "reorderLevel": 10 },
+      { "id": "40000000-0000-0000-0000-000000000002", "name": "HDMI Cable", "sku": "SKU-MID-07", "totalStock": 7, "reorderLevel": 10 },
+      { "id": "40000000-0000-0000-0000-000000000003", "name": "USB-C Hub", "sku": "SKU-EDGE-10", "totalStock": 10, "reorderLevel": 10 }
+    ],
+    "expectedFacts": {
+      "itemCount": 3,
+      "lowestStockSku": "SKU-MIN-02",
+      "expectedSkus": ["SKU-MIN-02", "SKU-MID-07", "SKU-EDGE-10"]
+    }
+  },
+  {
+    "id": "scenario-05",
+    "name": "Edge condition hitting threshold exactly",
+    "threshold": 15,
+    "inventory": [
+      { "id": "50000000-0000-0000-0000-000000000001", "name": "Ergonomic Chair", "sku": "SKU-EDGE-15", "totalStock": 15, "reorderLevel": 20 }
+    ],
+    "expectedFacts": {
+      "itemCount": 1,
+      "lowestStockSku": "SKU-EDGE-15",
+      "expectedSkus": ["SKU-EDGE-15"]
+    }
+  },
+  {
+    "id": "scenario-06",
+    "name": "Five low-stock cable and peripheral accessories",
+    "threshold": 5,
+    "inventory": [
+      { "id": "60000000-0000-0000-0000-000000000001", "name": "Cat6 Cable", "sku": "SKU-CABLE-01", "totalStock": 1, "reorderLevel": 15 },
+      { "id": "60000000-0000-0000-0000-000000000002", "name": "DisplayPort Adapter", "sku": "SKU-ADAPTER-02", "totalStock": 2, "reorderLevel": 15 },
+      { "id": "60000000-0000-0000-0000-000000000003", "name": "Compact Hub", "sku": "SKU-HUB-03", "totalStock": 3, "reorderLevel": 15 },
+      { "id": "60000000-0000-0000-0000-000000000004", "name": "Wireless Mouse", "sku": "SKU-MOUSE-04", "totalStock": 4, "reorderLevel": 15 },
+      { "id": "60000000-0000-0000-0000-000000000005", "name": "Desk Pad", "sku": "SKU-PAD-05", "totalStock": 5, "reorderLevel": 15 }
+    ],
+    "expectedFacts": {
+      "itemCount": 5,
+      "lowestStockSku": "SKU-CABLE-01",
+      "expectedSkus": ["SKU-CABLE-01", "SKU-ADAPTER-02", "SKU-HUB-03", "SKU-MOUSE-04", "SKU-PAD-05"]
+    }
+  },
+  {
+    "id": "scenario-07",
+    "name": "High-value computing components",
+    "threshold": 5,
+    "inventory": [
+      { "id": "70000000-0000-0000-0000-000000000001", "name": "Dedicated Graphics Card", "sku": "SKU-GPU-01", "totalStock": 0, "reorderLevel": 5 },
+      { "id": "70000000-0000-0000-0000-000000000002", "name": "Octa-Core Processor", "sku": "SKU-CPU-02", "totalStock": 1, "reorderLevel": 5 }
+    ],
+    "expectedFacts": {
+      "itemCount": 2,
+      "lowestStockSku": "SKU-GPU-01",
+      "expectedSkus": ["SKU-GPU-01", "SKU-CPU-02"]
+    }
+  },
+  {
+    "id": "scenario-08",
+    "name": "Fast-moving consumable items",
+    "threshold": 10,
+    "inventory": [
+      { "id": "80000000-0000-0000-0000-000000000001", "name": "Thermal Paper Rolls", "sku": "SKU-ROLL-04", "totalStock": 4, "reorderLevel": 30 }
+    ],
+    "expectedFacts": {
+      "itemCount": 1,
+      "lowestStockSku": "SKU-ROLL-04",
+      "expectedSkus": ["SKU-ROLL-04"]
+    }
+  },
+  {
+    "id": "scenario-09",
+    "name": "Industrial hardware fasteners",
+    "threshold": 10,
+    "inventory": [
+      { "id": "90000000-0000-0000-0000-000000000001", "name": "M6 Stainless Bolts", "sku": "SKU-BOLT-08", "totalStock": 8, "reorderLevel": 50 },
+      { "id": "90000000-0000-0000-0000-000000000002", "name": "M6 Lock Nuts", "sku": "SKU-NUT-09", "totalStock": 9, "reorderLevel": 50 }
+    ],
+    "expectedFacts": {
+      "itemCount": 2,
+      "lowestStockSku": "SKU-BOLT-08",
+      "expectedSkus": ["SKU-BOLT-08", "SKU-NUT-09"]
+    }
+  },
+  {
+    "id": "scenario-10",
+    "name": "Mixed warehouse catalog with 4 low items",
+    "threshold": 8,
+    "inventory": [
+      { "id": "a0000000-0000-0000-0000-000000000001", "name": "Cordless Drill", "sku": "SKU-DRILL-02", "totalStock": 2, "reorderLevel": 10 },
+      { "id": "a0000000-0000-0000-0000-000000000002", "name": "Reciprocating Saw", "sku": "SKU-SAW-03", "totalStock": 3, "reorderLevel": 10 },
+      { "id": "a0000000-0000-0000-0000-000000000003", "name": "Drill Bit Set", "sku": "SKU-BITS-05", "totalStock": 5, "reorderLevel": 10 },
+      { "id": "a0000000-0000-0000-0000-000000000004", "name": "Heavy Duty Tape", "sku": "SKU-TAPE-08", "totalStock": 8, "reorderLevel": 10 }
+    ],
+    "expectedFacts": {
+      "itemCount": 4,
+      "lowestStockSku": "SKU-DRILL-02",
+      "expectedSkus": ["SKU-DRILL-02", "SKU-SAW-03", "SKU-BITS-05", "SKU-TAPE-08"]
+    }
+  }
+]
+
