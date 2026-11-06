@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # NuGet dependencies for .NET 8 projects
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+  # npm dependencies for JavaScript unit tests & Playwright
+  - package-ecosystem: "npm"
+    directory: "/tests/js"
+    schedule:
+      interval: "weekly"
+
+  # GitHub Actions workflow actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

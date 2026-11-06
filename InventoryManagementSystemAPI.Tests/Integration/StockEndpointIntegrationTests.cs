@@ -40,28 +40,61 @@ namespace InventoryManagementSystemAPI.Tests.Integration
 
     public class StockEndpointIntegrationTests
     {
-        private const string DockerSkipReason = "Docker daemon is not running on this host; integration test against SQL Server container did not run.";
+        private static string? GetTestConnectionString() =>
+            Environment.GetEnvironmentVariable("SQL_SERVER_TEST_CONNECTION_STRING");
 
-        [Fact(Skip = DockerSkipReason)]
+        private static void EnsureSqlServerAvailable()
+        {
+            var conn = GetTestConnectionString();
+            Skip.If(string.IsNullOrWhiteSpace(conn), "SQL_SERVER_TEST_CONNECTION_STRING is not configured; integration tests against SQL Server container did not run on this host.");
+        }
+
+        [SkippableFact]
         public async Task PostAdjust_WhenValidAdjustment_Returns200WithNewQuantity()
         {
-            var factory = new CustomWebApplicationFactory("Server=localhost;Database=TestDB;Integrated Security=true;TrustServerCertificate=True;");
+            EnsureSqlServerAvailable();
+            var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
             var client = factory.CreateClient();
+
+            var productId = Guid.NewGuid();
+            using (var scope = factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await db.Database.EnsureCreatedAsync();
+
+                var product = new Product
+                {
+                    Id = productId,
+                    Name = "Valid Adjustment Test Item",
+                    SKU = "VAL-01",
+                    Barcode = "111111111",
+                    QuantityInStock = 10
+                };
+                db.Products.Add(product);
+                await db.SaveChangesAsync();
+            }
 
             var response = await client.PostAsJsonAsync("/api/stock/adjust", new AdjustStockDto
             {
-                ProductId = Guid.NewGuid(),
+                ProductId = productId,
                 Delta = 5
             });
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
 
-        [Fact(Skip = DockerSkipReason)]
+        [SkippableFact]
         public async Task PostAdjust_WhenUnknownProduct_Returns404()
         {
-            var factory = new CustomWebApplicationFactory("Server=localhost;Database=TestDB;Integrated Security=true;TrustServerCertificate=True;");
+            EnsureSqlServerAvailable();
+            var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
             var client = factory.CreateClient();
+
+            using (var scope = factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await db.Database.EnsureCreatedAsync();
+            }
 
             var response = await client.PostAsJsonAsync("/api/stock/adjust", new AdjustStockDto
             {
@@ -72,25 +105,45 @@ namespace InventoryManagementSystemAPI.Tests.Integration
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
-        [Fact(Skip = DockerSkipReason)]
+        [SkippableFact]
         public async Task PostAdjust_WhenNegativeResult_Returns409()
         {
-            var factory = new CustomWebApplicationFactory("Server=localhost;Database=TestDB;Integrated Security=true;TrustServerCertificate=True;");
+            EnsureSqlServerAvailable();
+            var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
             var client = factory.CreateClient();
+
+            var productId = Guid.NewGuid();
+            using (var scope = factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await db.Database.EnsureCreatedAsync();
+
+                var product = new Product
+                {
+                    Id = productId,
+                    Name = "Negative Test Item",
+                    SKU = "NEG-01",
+                    Barcode = "222222222",
+                    QuantityInStock = 5
+                };
+                db.Products.Add(product);
+                await db.SaveChangesAsync();
+            }
 
             var response = await client.PostAsJsonAsync("/api/stock/adjust", new AdjustStockDto
             {
-                ProductId = Guid.NewGuid(),
-                Delta = -999
+                ProductId = productId,
+                Delta = -10
             });
 
             Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         }
 
-        [Fact(Skip = DockerSkipReason)]
+        [SkippableFact]
         public async Task PostAdjust_WhenInvalidInput_Returns400()
         {
-            var factory = new CustomWebApplicationFactory("Server=localhost;Database=TestDB;Integrated Security=true;TrustServerCertificate=True;");
+            EnsureSqlServerAvailable();
+            var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
             var client = factory.CreateClient();
 
             var response = await client.PostAsJsonAsync("/api/stock/adjust", new AdjustStockDto
@@ -102,12 +155,11 @@ namespace InventoryManagementSystemAPI.Tests.Integration
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
-        [Fact(Skip = DockerSkipReason)]
+        [SkippableFact]
         public async Task PostAdjust_Concurrency_20ParallelCalls_10Succeed_10Conflict_FinalZero()
         {
-            var connectionString = Environment.GetEnvironmentVariable("SQL_SERVER_TEST_CONNECTION_STRING")
-                ?? "Server=localhost;Database=InventoryIntegrationTestDB;User Id=sa;Password=Password123!;TrustServerCertificate=True;";
-
+            EnsureSqlServerAvailable();
+            var connectionString = GetTestConnectionString()!;
             var factory = new CustomWebApplicationFactory(connectionString);
             var client = factory.CreateClient();
 

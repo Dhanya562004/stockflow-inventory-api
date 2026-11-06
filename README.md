@@ -31,6 +31,8 @@ A production-inspired **Inventory Management System REST API and MVC Web Applica
 - [Database Seeding](#database-seeding)
 - [Getting Started](#getting-started)
 - [Test Results](#test-results)
+- [CI Pipeline](#ci-pipeline)
+- [Low-Stock SQL Query](#low-stock-sql-query)
 - [What I Learned](#what-i-learned)
 - [Future Improvements](#future-improvements)
 - [Author](#author)
@@ -479,6 +481,18 @@ Passed!  - Failed:     0, Passed:    34, Skipped:     5, Total:    39, Duration:
 - **Reports Tests (2 tests):** Low-stock report filtering products strictly at or below threshold and rejecting negative threshold inputs.
 - **Stock View & Controller Tests (2 tests):** Razor view returns valid ViewResult and form action matches `POST /api/stock/adjust`.
 - **Integration Tests (5 tests, skipped on local host without active Docker daemon, run in CI):** WebApplicationFactory endpoint coverage (200, 404, 409, 400) and 20-client concurrent adjustment test against SQL Server container.
+
+---
+
+# CI Pipeline
+
+The project features an automated GitHub Actions CI pipeline ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) configured with caching, multiple parallel jobs, and strict quality gates:
+
+| Job | Environment & Tools | What It Proves |
+| :--- | :--- | :--- |
+| **`.NET Build, Test & Coverage`** | Ubuntu, .NET 8, SQL Server 2022 service container, Coverlet | Verifies compilation in Release mode, runs all 48 .NET tests against a live SQL Server instance, guarantees zero integration tests are skipped in CI via automated TRX inspection, enforces a minimum 7.0% line coverage gate against the measured baseline (7.26%), and uploads TRX and Cobertura XML artifacts. |
+| **`JavaScript Unit Tests`** | Ubuntu, Node.js 20, Jest, jsdom | Proves `wwwroot/js/stock.js` correctly handles every HTTP status code (200, 400 validation, 404, 409 negative balance, 500 retry), updates DOM via `textContent` (preventing XSS), manages button loading states, and renders product catalog tables and empty states without framework dependencies. |
+| **`Playwright E2E Tests`** | Ubuntu, Node.js 20, .NET 8, Chromium | Starts the ASP.NET Core web server on Kestrel (`http://localhost:5228`), boots headless Chromium, navigates to `/stock`, fills the form, submits an adjustment, and verifies end-to-end rendering and quantity updates in a real browser. |
 
 ---
 

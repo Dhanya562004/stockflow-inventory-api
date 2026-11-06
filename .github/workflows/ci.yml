@@ -1,4 +1,4 @@
-name: Build & Test
+name: CI Pipeline
 
 on:
   push:
@@ -7,7 +7,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-test:
+  dotnet-build-and-test:
+    name: .NET Build, Test & Coverage
     runs-on: ubuntu-latest
 
     services:
@@ -33,20 +34,187 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
     - name: Restore dependencies
       run: dotnet restore
 
     - name: Build solution
       run: dotnet build --no-restore --configuration Release
 
-    - name: Run tests
+    - name: Run tests with Cobertura code coverage
       env:
         SQL_SERVER_TEST_CONNECTION_STRING: "Server=localhost,1433;Database=InventoryTestDB;User Id=sa;Password=Password123!;TrustServerCertificate=True;"
-      run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test_results.trx" --results-directory ./TestResults
+      run: |
+        dotnet test --no-build --configuration Release \
+          --logger "trx;LogFileName=test_results.trx" \
+          --results-directory ./TestResults \
+          --collect:"XPlat Code Coverage"
 
-    - name: Upload test results
+    # In CI, a dedicated SQL Server 2022 service container is provided and configured.
+    # Therefore, all StockEndpointIntegrationTests must execute against the database.
+    # If any integration test reports as skipped in the TRX file, fail the build immediately.
+    - name: Fail build if any integration tests were skipped
+      run: |
+        python3 -c "
+        import xml.etree.ElementTree as ET
+        import sys, glob
+
+        trx_files = glob.glob('./TestResults/**/*.trx', recursive=True)
+        if not trx_files:
+            print('ERROR: No TRX test results file found.')
+            sys.exit(1)
+
+        tree = ET.parse(trx_files[0])
+        root = tree.getroot()
+        ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+
+        skipped_integration_tests = []
+        for result in root.findall('.//t:UnitTestResult', ns):
+            test_name = result.get('testName', '')
+            outcome = result.get('outcome', '')
+            if 'Integration' in test_name and outcome.lower() in ('skipped', 'notexecuted', 'ignored'):
+                skipped_integration_tests.append(test_name)
+
+        if skipped_integration_tests:
+            print(f'ERROR: {len(skipped_integration_tests)} integration test(s) skipped in CI:')
+            for name in skipped_integration_tests:
+                print(f'  - {name}')
+            sys.exit(1)
+        else:
+            print('VERIFIED: All integration tests ran and none were skipped in CI.')
+        "
+
+    # Gate on the measured line coverage baseline (7.0%, measured baseline: 7.26%)
+    - name: Check line coverage against measured baseline threshold (7.0%)
+      run: |
+        python3 -c "
+        import xml.etree.ElementTree as ET
+        import sys, glob
+
+        cov_files = glob.glob('./TestResults/**/coverage.cobertura.xml', recursive=True)
+        if not cov_files:
+            print('ERROR: No Cobertura coverage file found.')
+            sys.exit(1)
+
+        tree = ET.parse(cov_files[0])
+        root = tree.getroot()
+        line_rate = float(root.get('line-rate', 0.0))
+        coverage_pct = line_rate * 100
+        threshold = 7.0
+
+        print(f'Measured Line Coverage: {coverage_pct:.2f}% (Threshold: {threshold}%)')
+        if coverage_pct < threshold:
+            print(f'ERROR: Code coverage {coverage_pct:.2f}% is below threshold {threshold}%')
+            sys.exit(1)
+        print('SUCCESS: Code coverage threshold met.')
+        "
+
+    - name: Upload test results (TRX)
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: test-results
-        path: ./TestResults/*.trx
+        name: test-results-trx
+        path: ./TestResults/**/*.trx
+
+    - name: Upload Cobertura coverage report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-cobertura
+        path: ./TestResults/**/coverage.cobertura.xml
+
+  js-unit-tests:
+    name: JavaScript Unit Tests (Jest & jsdom)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Cache npm packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-${{ hashFiles('tests/js/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
+
+    - name: Install dependencies
+      working-directory: tests/js
+      run: npm ci
+
+    - name: Run Jest tests
+      working-directory: tests/js
+      run: npm test
+
+  playwright-e2e-tests:
+    name: Playwright E2E Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Cache npm packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-${{ hashFiles('tests/js/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
+
+    - name: Install npm dependencies & Playwright browsers
+      working-directory: tests/js
+      run: |
+        npm ci
+        npx playwright install --with-deps chromium
+
+    - name: Build web application
+      run: dotnet build --configuration Release
+
+    - name: Start web application
+      run: |
+        dotnet run --no-build --configuration Release --urls "http://localhost:5228" &
+        sleep 5
+        curl -s --retry 10 --retry-delay 2 --retry-connrefused http://localhost:5228/stock > /dev/null
+
+    - name: Run Playwright tests
+      working-directory: tests/js
+      run: npx playwright test
+
+    - name: Upload Playwright report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report
+        path: playwright-report/
