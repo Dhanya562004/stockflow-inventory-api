@@ -1,0 +1,36 @@
+name: Legacy .NET Framework CI
+
+on:
+  push:
+    branches: [ "main", "feature/*" ]
+    paths:
+      - 'legacy/**'
+      - '.github/workflows/legacy-ci.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'legacy/**'
+      - '.github/workflows/legacy-ci.yml'
+
+jobs:
+  build-and-test-legacy:
+    name: Build & Test Legacy .NET Framework 4.8 MVC 5
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore legacy/StockFlow.Legacy.sln
+
+    - name: Build legacy solution
+      run: dotnet build legacy/StockFlow.Legacy.sln --configuration Release --no-restore
+
+    - name: Execute legacy unit tests
+      run: dotnet test legacy/StockFlow.Legacy.sln --configuration Release --no-build --verbosity normal

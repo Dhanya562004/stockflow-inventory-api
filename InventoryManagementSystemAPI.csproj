@@ -9,6 +9,10 @@
   <ItemGroup>
     <Folder Include="Validators\" />
     <Compile Remove="InventoryManagementSystemAPI.Tests\**" />
+    <Compile Remove="legacy\**" />
+    <Content Remove="legacy\**" />
+    <EmbeddedResource Remove="legacy\**" />
+    <None Remove="legacy\**" />
   </ItemGroup>
 
   <ItemGroup>
