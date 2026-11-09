@@ -32,6 +32,7 @@ A production-inspired **Inventory Management System REST API and MVC Web Applica
     - [Multi-Channel Concurrency & Double-Selling Prevention](docs/cin7-multi-channel-inventory.md)
     - [SQL Server Indexing & Performance Analysis](docs/sql-server-indexing-and-performance.md)
     - [Azure Cloud SaaS Deployment Blueprint](docs/deploy-azure.md)
+- [Legacy Sub-Project: ASP.NET MVC 5 (.NET Framework 4.8)](#legacy-sub-project-aspnet-mvc-5-net-framework-48)
 - [Authentication & Authorization](#authentication--authorization)
 - [Validation](#validation)
 - [Database Seeding](#database-seeding)
@@ -356,6 +357,56 @@ ORDER BY CurrentStock ASC
 
 ---
 
+# Legacy Sub-Project: ASP.NET MVC 5 (.NET Framework 4.8)
+
+In enterprise SaaS ecosystems (such as Cin7), modern cloud platforms frequently evolve alongside legacy systems. To model this real-world architecture without compromising the modern application, the repository contains a fully isolated **Legacy Sub-Project** (`legacy/StockFlow.LegacyMvc5/`) representing the pre-migration baseline.
+
+### 1. Structure of the Legacy Subsystem
+
+```text
+legacy/
+├── StockFlow.Legacy.sln                       # Isolated solution for .NET Framework 4.8
+├── StockFlow.LegacyMvc5/                      # ASP.NET MVC 5 & Web API 2 Project (net48)
+│   ├── Global.asax & Global.asax.cs          # HttpApplication pipeline (Application_Start, etc.)
+│   ├── Web.config                             # Traditional XML configuration (system.web, handlers)
+│   ├── App_Start/
+│   │   ├── RouteConfig.cs                     # RouteCollection.MapRoute ({controller}/{action}/{id})
+│   │   ├── WebApiConfig.cs                    # HttpConfiguration.Routes.MapHttpRoute (api/{controller}/{id})
+│   │   └── FilterConfig.cs                    # GlobalFilterCollection (HandleErrorAttribute)
+│   ├── Controllers/
+│   │   ├── StockController.cs                 # System.Web.Mvc.Controller (Razor actions)
+│   │   └── Api/LegacyStockApiController.cs    # System.Web.Http.ApiController (REST endpoints)
+│   ├── Data/
+│   │   ├── ILegacyStockRepository.cs          # Synchronous repository interface
+│   │   └── LegacyAdoNetStockRepository.cs     # Synchronous ADO.NET with SQL UPDLOCK transactions
+│   ├── Models/                                # Legacy DTOs and DataAnnotations
+│   └── Views/Stock/Index.cshtml               # MVC 5 Razor View with HtmlHelper & AntiForgeryToken
+└── StockFlow.LegacyMvc5.Tests/                # Unit test project (net48)
+    ├── Controllers/LegacyStockApiControllerTests.cs  # Web API 2 tests using Moq
+    └── Controllers/LegacyStockControllerTests.cs     # MVC 5 controller tests using Moq
+```
+
+### 2. Architectural Comparison: Legacy MVC 5 vs. Modern .NET 8
+
+| Feature | Legacy Sub-Project (`legacy/StockFlow.LegacyMvc5`) | Modern Production Application (`/`) |
+| :--- | :--- | :--- |
+| **Target Framework** | `.NET Framework 4.8` (`net48`) | `.NET 8.0` (`net8.0`) |
+| **Web Framework** | ASP.NET MVC 5 (`System.Web.Mvc`) & Web API 2 (`System.Web.Http`) | ASP.NET Core 8 MVC & Web API (`Microsoft.AspNetCore.Mvc`) |
+| **Startup / Entry Point** | `Global.asax.cs` (`HttpApplication` lifecycle) | `Program.cs` (`WebApplicationBuilder` unified host) |
+| **Pipeline Architecture** | `IHttpModule` & `IHttpHandler` with 20+ IIS events | Non-blocking linear `RequestDelegate` Middleware pipeline |
+| **Configuration** | XML `Web.config` (`<system.web>`, `<system.webServer>`) | Hierarchical `appsettings.json` + environment variables |
+| **State Management** | `System.Web.HttpContext.Current`, `TempData`, `ViewBag` | Dependency-injected `IHttpContextAccessor`, Scoped services |
+| **Data Access** | Synchronous ADO.NET with explicit `SqlTransaction` and `UPDLOCK` | Entity Framework Core 8 with native async & `RowVersion` concurrency |
+| **Hosting Model** | Strongly coupled to Windows IIS (`w3wp.exe`) | Kestrel cross-platform asynchronous web server (Linux/Windows/Docker) |
+
+### 3. Running Legacy Tests
+The legacy project is kept isolated from the main .NET 8 solution and has its own dedicated solution file:
+```bash
+dotnet test legacy/StockFlow.Legacy.sln
+```
+
+---
+
 # Authentication & Authorization
 
 Authentication is implemented using:
@@ -540,7 +591,22 @@ Running 1 test using 1 worker
   1 passed (4.1s)
 ```
 
-### 4. Code Coverage Baseline
+### 4. Legacy .NET Framework Test Suite (`xUnit & Moq`)
+Executed in `legacy` via `dotnet test legacy/StockFlow.Legacy.sln`:
+
+```text
+Test run for legacy\StockFlow.LegacyMvc5.Tests\bin\Debug\net48\StockFlow.LegacyMvc5.Tests.dll (.NETFramework,Version=v4.8)
+VSTest version 17.11.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:    10, Skipped:     0, Total:    10, Duration: 377 ms - StockFlow.LegacyMvc5.Tests.dll (net48)
+```
+- **Web API 2 Controller Tests (6 tests):** Valid adjustments returning 200 with new quantity, non-existent product returning 404, negative resulting balance returning 409 Conflict, delta zero returning 400 Bad Request, successful retrieval returning 200, unknown retrieval returning 404.
+- **MVC 5 Controller Tests (4 tests):** Index returning ViewResult with all products and framework banner, invalid model state returning ViewResult with error message, valid adjustment redirecting to Index with TempData success message, adjustment failure returning ViewResult with error message.
+
+### 5. Code Coverage Baseline
 Measured using Coverlet in Cobertura XML format:
 - **Line Coverage Baseline (Unit Tests Only):** 7.26% (336 covered / 4,623 valid lines)
 - **Line Coverage in CI (Including SQL Server Integration Tests):** 15.48% (716 covered / 4,625 valid lines)
