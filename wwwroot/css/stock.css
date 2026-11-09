@@ -193,3 +193,158 @@ button[type="submit"]:disabled {
     border-radius: 4px;
     margin-top: 1rem;
 }
+
+/* AI Inventory Replenishment Advisor Styles */
+.ai-assistant-section {
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--border-color);
+}
+
+.section-description {
+    color: var(--muted-color);
+    font-size: 0.95rem;
+    margin-top: -0.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.ai-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.inline-group {
+    margin-bottom: 0;
+    min-width: 180px;
+}
+
+.ai-btn {
+    background-color: #681da8;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 0.65rem 1.25rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.ai-btn:hover:not(:disabled) {
+    background-color: #521685;
+}
+
+.ai-btn:disabled {
+    background-color: #bfa1d9;
+    cursor: not-allowed;
+}
+
+.ai-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    background-color: #f3e8fd;
+    color: #521685;
+    border-radius: 4px;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 3px solid #bfa1d9;
+    border-top-color: #681da8;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.ai-result-card {
+    background-color: #ffffff;
+    border: 1px solid #d8b4fe;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 1.25rem;
+    box-shadow: 0 1px 3px rgba(104, 29, 168, 0.1);
+}
+
+.ai-card-header {
+    background-color: #f8f4ff;
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ede9fe;
+}
+
+.ai-badge {
+    background-color: #681da8;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+}
+
+.ai-items-count {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #681da8;
+}
+
+.ai-card-body {
+    padding: 1.25rem;
+}
+
+.ai-subheading {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f1f1f;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.ai-card-body .ai-subheading:first-child {
+    margin-top: 0;
+}
+
+.ai-summary-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.ai-action-box {
+    background-color: #fdf2f8;
+    border-left: 4px solid #db2777;
+    padding: 0.75rem 1rem;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #831843;
+}
+
+.ai-items-list {
+    margin: 0.5rem 0 0 1.25rem;
+    padding: 0;
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.ai-items-list li {
+    margin-bottom: 0.35rem;
+}

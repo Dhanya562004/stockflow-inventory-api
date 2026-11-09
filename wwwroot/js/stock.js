@@ -211,10 +211,160 @@ async function loadProducts() {
     }
 }
 
+async function handleAiStockAnalysis() {
+    const thresholdInput = document.getElementById('aiThreshold');
+    const analyzeBtn = document.getElementById('aiAnalyzeBtn');
+    const loadingIndicator = document.getElementById('aiLoadingIndicator');
+    const statusMessage = document.getElementById('aiStatusMessage');
+    const resultCard = document.getElementById('aiResultCard');
+
+    if (!analyzeBtn) {
+        return;
+    }
+
+    let threshold = 20;
+    if (thresholdInput) {
+        const parsed = parseInt(thresholdInput.value, 10);
+        if (!isNaN(parsed) && parsed >= 0) {
+            threshold = parsed;
+        } else {
+            if (statusMessage) {
+                statusMessage.className = 'status-box error';
+                statusMessage.style.display = 'block';
+                statusMessage.textContent = 'Please enter a valid threshold (0 or greater).';
+            }
+            return;
+        }
+    }
+
+    // Reset status and result card
+    if (statusMessage) {
+        statusMessage.className = 'status-box';
+        statusMessage.style.display = 'none';
+        statusMessage.textContent = '';
+    }
+    if (resultCard) {
+        resultCard.style.display = 'none';
+    }
+
+    // Enter loading state
+    analyzeBtn.disabled = true;
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'flex';
+    }
+
+    try {
+        const response = await fetch('/api/reports/low-stock/summary?threshold=' + encodeURIComponent(threshold), {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        let data = null;
+        try {
+            data = await response.json();
+        } catch (e) {
+            data = null;
+        }
+
+        if (response.status === 200 && data) {
+            renderAiSummary(data);
+        } else if (response.status === 400) {
+            if (statusMessage) {
+                statusMessage.className = 'status-box error';
+                statusMessage.style.display = 'block';
+                statusMessage.textContent = (data && data.message) ? data.message : 'Invalid threshold parameter.';
+            }
+        } else if (response.status === 503) {
+            if (statusMessage) {
+                statusMessage.className = 'status-box error';
+                statusMessage.style.display = 'block';
+                statusMessage.textContent = (data && data.message) ? data.message : 'AI replenishment advisor is temporarily unavailable. Verify OpenAI API key configuration.';
+            }
+        } else {
+            if (statusMessage) {
+                statusMessage.className = 'status-box error';
+                statusMessage.style.display = 'block';
+                statusMessage.textContent = 'Failed to generate AI analysis. Please retry.';
+            }
+        }
+    } catch (networkError) {
+        if (statusMessage) {
+            statusMessage.className = 'status-box error';
+            statusMessage.style.display = 'block';
+            statusMessage.textContent = 'Network connection failure while requesting AI summary. Please retry.';
+        }
+    } finally {
+        analyzeBtn.disabled = false;
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
+    }
+}
+
+function renderAiSummary(data) {
+    const resultCard = document.getElementById('aiResultCard');
+    const executiveSummary = document.getElementById('aiExecutiveSummary');
+    const recommendedAction = document.getElementById('aiRecommendedAction');
+    const itemsList = document.getElementById('aiItemsList');
+    const itemsCount = document.getElementById('aiItemsCount');
+
+    if (!resultCard) {
+        return;
+    }
+
+    if (executiveSummary) {
+        executiveSummary.textContent = data.summary || 'All inventory levels currently meet the target threshold.';
+    }
+
+    if (recommendedAction) {
+        const actionText = (data.analysis && data.analysis.recommendedAction)
+            ? data.analysis.recommendedAction
+            : 'No immediate reorders required.';
+        recommendedAction.textContent = actionText;
+    }
+
+    if (itemsCount) {
+        const count = (data.itemCount !== undefined)
+            ? data.itemCount
+            : (data.analysis && data.analysis.items ? data.analysis.items.length : 0);
+        itemsCount.textContent = count + ' At-Risk Items';
+    }
+
+    if (itemsList) {
+        while (itemsList.firstChild) {
+            itemsList.removeChild(itemsList.firstChild);
+        }
+
+        const items = (data.analysis && Array.isArray(data.analysis.items))
+            ? data.analysis.items
+            : [];
+
+        if (items.length === 0) {
+            const li = document.createElement('li');
+            li.textContent = 'No critical SKUs currently below the threshold.';
+            itemsList.appendChild(li);
+        } else {
+            for (let i = 0; i < items.length; i++) {
+                const li = document.createElement('li');
+                li.textContent = items[i];
+                itemsList.appendChild(li);
+            }
+        }
+    }
+
+    resultCard.style.display = 'block';
+}
+
 function initStockPage() {
     const form = document.getElementById('stockAdjustmentForm');
     if (form) {
         form.addEventListener('submit', handleStockAdjustment);
+    }
+    const aiBtn = document.getElementById('aiAnalyzeBtn');
+    if (aiBtn) {
+        aiBtn.addEventListener('click', handleAiStockAnalysis);
     }
     loadProducts();
 }
@@ -232,6 +382,8 @@ if (typeof module !== 'undefined' && module.exports) {
         handleStockAdjustment,
         renderProductList,
         loadProducts,
+        handleAiStockAnalysis,
+        renderAiSummary,
         initStockPage
     };
 }

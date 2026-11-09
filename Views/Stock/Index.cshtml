@@ -48,6 +48,43 @@
                 <tbody id="productTableBody"></tbody>
             </table>
         </section>
+
+        <section class="ai-assistant-section" aria-labelledby="aiHeading">
+            <h2 id="aiHeading">AI Inventory Replenishment Advisor</h2>
+            <p class="section-description">Analyze low-stock items across catalog thresholds using AI to generate actionable replenishment recommendations.</p>
+            
+            <div class="ai-controls">
+                <div class="form-group inline-group">
+                    <label for="aiThreshold">Low-Stock Threshold:</label>
+                    <input type="number" id="aiThreshold" name="aiThreshold" value="20" min="0" max="1000" step="1" />
+                </div>
+                <button type="button" id="aiAnalyzeBtn" class="ai-btn">Analyze Stock with AI</button>
+            </div>
+
+            <div id="aiLoadingIndicator" class="ai-loading" role="status" aria-live="polite" style="display: none;">
+                <span class="spinner" aria-hidden="true"></span>
+                <span id="aiLoadingText">Analyzing low-stock inventory via AI...</span>
+            </div>
+
+            <div id="aiStatusMessage" class="status-box" role="status" aria-live="polite"></div>
+
+            <div id="aiResultCard" class="ai-result-card" style="display: none;" aria-live="polite">
+                <div class="ai-card-header">
+                    <span class="ai-badge">AI Replenishment Analysis</span>
+                    <span id="aiItemsCount" class="ai-items-count"></span>
+                </div>
+                <div class="ai-card-body">
+                    <h3 class="ai-subheading">Executive Summary</h3>
+                    <p id="aiExecutiveSummary" class="ai-summary-text"></p>
+                    
+                    <h3 class="ai-subheading">Recommended Replenishment Action</h3>
+                    <div id="aiRecommendedAction" class="ai-action-box"></div>
+
+                    <h3 class="ai-subheading">Identified At-Risk SKUs</h3>
+                    <ul id="aiItemsList" class="ai-items-list"></ul>
+                </div>
+            </div>
+        </section>
     </main>
 
     <script src="/js/stock.js"></script>

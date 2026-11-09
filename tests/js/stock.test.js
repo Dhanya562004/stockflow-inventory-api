@@ -6,6 +6,8 @@ const {
     handleStockAdjustment,
     renderProductList,
     loadProducts,
+    handleAiStockAnalysis,
+    renderAiSummary,
     initStockPage
 } = require('../../wwwroot/js/stock.js');
 
@@ -32,6 +34,17 @@ describe('Stock Management Frontend Unit Tests', () => {
                 </thead>
                 <tbody id="productTableBody"></tbody>
             </table>
+
+            <input type="number" id="aiThreshold" value="20" />
+            <button type="button" id="aiAnalyzeBtn">Analyze Stock with AI</button>
+            <div id="aiLoadingIndicator" style="display: none;"></div>
+            <div id="aiStatusMessage" class="status-box" role="status" style="display: none;"></div>
+            <div id="aiResultCard" style="display: none;">
+                <span id="aiItemsCount"></span>
+                <p id="aiExecutiveSummary"></p>
+                <div id="aiRecommendedAction"></div>
+                <ul id="aiItemsList"></ul>
+            </div>
         `;
         global.fetch = jest.fn();
     });
@@ -226,6 +239,72 @@ describe('Stock Management Frontend Unit Tests', () => {
         const selectBtn = row.querySelector('.select-btn');
         selectBtn.click();
         expect(productIdInput.value).toBe('11111111-1111-1111-1111-111111111111');
+    });
+
+    test('handleAiStockAnalysis 200 path renders AI summary, recommended action, and items', async () => {
+        const analyzeBtn = document.getElementById('aiAnalyzeBtn');
+        const loadingIndicator = document.getElementById('aiLoadingIndicator');
+        const resultCard = document.getElementById('aiResultCard');
+        const executiveSummary = document.getElementById('aiExecutiveSummary');
+        const recommendedAction = document.getElementById('aiRecommendedAction');
+        const itemsList = document.getElementById('aiItemsList');
+        const itemsCount = document.getElementById('aiItemsCount');
+
+        global.fetch.mockResolvedValueOnce({
+            status: 200,
+            ok: true,
+            json: async () => ({
+                threshold: 20,
+                itemCount: 2,
+                summary: 'Immediate purchase order needed for low stock peripherals.',
+                analysis: {
+                    summary: 'Immediate purchase order needed for low stock peripherals.',
+                    items: ['Logitech MX Master 3S (Stock: 12)', 'Dell Laptop (Stock: 5)'],
+                    recommendedAction: 'Order 30 units of Logitech mouse from Supplier A.'
+                }
+            })
+        });
+
+        await handleAiStockAnalysis();
+
+        expect(analyzeBtn.disabled).toBe(false);
+        expect(loadingIndicator.style.display).toBe('none');
+        expect(resultCard.style.display).toBe('block');
+        expect(executiveSummary.textContent).toBe('Immediate purchase order needed for low stock peripherals.');
+        expect(recommendedAction.textContent).toBe('Order 30 units of Logitech mouse from Supplier A.');
+        expect(itemsCount.textContent).toBe('2 At-Risk Items');
+        expect(itemsList.children.length).toBe(2);
+        expect(itemsList.children[0].textContent).toBe('Logitech MX Master 3S (Stock: 12)');
+    });
+
+    test('handleAiStockAnalysis handles 503 service unavailable cleanly', async () => {
+        const statusMessage = document.getElementById('aiStatusMessage');
+        const resultCard = document.getElementById('aiResultCard');
+
+        global.fetch.mockResolvedValueOnce({
+            status: 503,
+            ok: false,
+            json: async () => ({ message: 'LLM summary service is currently unavailable.' })
+        });
+
+        await handleAiStockAnalysis();
+
+        expect(resultCard.style.display).toBe('none');
+        expect(statusMessage.style.display).toBe('block');
+        expect(statusMessage.textContent).toBe('LLM summary service is currently unavailable.');
+    });
+
+    test('handleAiStockAnalysis handles network exceptions gracefully', async () => {
+        const statusMessage = document.getElementById('aiStatusMessage');
+        const resultCard = document.getElementById('aiResultCard');
+
+        global.fetch.mockRejectedValueOnce(new Error('Network error'));
+
+        await handleAiStockAnalysis();
+
+        expect(resultCard.style.display).toBe('none');
+        expect(statusMessage.style.display).toBe('block');
+        expect(statusMessage.textContent).toContain('Network connection failure');
     });
 });
 
