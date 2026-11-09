@@ -66,8 +66,21 @@ namespace InventoryManagementSystemAPI
             .AddJwtBearer(options =>
             {
                 var jwtKey = builder.Configuration["JWT:Key"]
-                             ?? Environment.GetEnvironmentVariable("JWT__Key")
-                             ?? "StockFlowDevelopmentAndProductionFallbackKeyMinimum256BitsRequired!";
+                             ?? Environment.GetEnvironmentVariable("JWT__Key");
+
+                if (string.IsNullOrWhiteSpace(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 32)
+                {
+                    if (builder.Environment.IsDevelopment())
+                    {
+                        jwtKey = "DevelopmentFallbackKeyForTestingOnlyMustBeAtLeast256BitsLong!";
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(
+                            "JWT:Key is not configured or is shorter than 256 bits (32 bytes). Set the JWT__Key environment variable.");
+                    }
+                }
+
                 var jwtIssuer = builder.Configuration["JWT:Issuer"] ?? "InventoryManagementSystemAPI";
                 var jwtAudience = builder.Configuration["JWT:Audience"] ?? "InventoryManagementSystemAPI";
 
