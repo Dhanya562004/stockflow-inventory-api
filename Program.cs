@@ -65,6 +65,12 @@ namespace InventoryManagementSystemAPI
             })
             .AddJwtBearer(options =>
             {
+                var jwtKey = builder.Configuration["JWT:Key"]
+                             ?? Environment.GetEnvironmentVariable("JWT__Key")
+                             ?? "StockFlowDevelopmentAndProductionFallbackKeyMinimum256BitsRequired!";
+                var jwtIssuer = builder.Configuration["JWT:Issuer"] ?? "InventoryManagementSystemAPI";
+                var jwtAudience = builder.Configuration["JWT:Audience"] ?? "InventoryManagementSystemAPI";
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -72,11 +78,11 @@ namespace InventoryManagementSystemAPI
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
 
-                    ValidIssuer = builder.Configuration["JWT:Issuer"],
-                    ValidAudience = builder.Configuration["JWT:Audience"],
+                    ValidIssuer = jwtIssuer,
+                    ValidAudience = jwtAudience,
 
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]))
+                        Encoding.UTF8.GetBytes(jwtKey))
                 };
             });
 
@@ -212,11 +218,8 @@ namespace InventoryManagementSystemAPI
             }
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
@@ -227,6 +230,9 @@ namespace InventoryManagementSystemAPI
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.MapGet("/", () => Results.Redirect("/stock"));
+            app.MapGet("/health", () => Results.Ok(new { status = "Healthy", timestamp = DateTime.UtcNow }));
 
             app.MapControllers();
 
