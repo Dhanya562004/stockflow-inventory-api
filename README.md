@@ -26,6 +26,12 @@ A production-inspired **Inventory Management System REST API and MVC Web Applica
   - [1. Stock Adjustment Endpoint](#1-stock-adjustment-endpoint)
   - [2. Low-Stock Report (Raw SQL)](#2-low-stock-report-raw-sql)
   - [3. xUnit Test Suite](#3-xunit-test-suite)
+  - [4. AI Inventory Replenishment Advisor](#4-ai-inventory-replenishment-advisor)
+  - [5. Enterprise Architecture & Migration Guides](#5-enterprise-architecture--migration-guides)
+    - [.NET Framework 4.8 to .NET 8 Migration Whitepaper](docs/dotnet-framework-to-dotnet8-migration.md)
+    - [Multi-Channel Concurrency & Double-Selling Prevention](docs/cin7-multi-channel-inventory.md)
+    - [SQL Server Indexing & Performance Analysis](docs/sql-server-indexing-and-performance.md)
+    - [Azure Cloud SaaS Deployment Blueprint](docs/deploy-azure.md)
 - [Authentication & Authorization](#authentication--authorization)
 - [Validation](#validation)
 - [Database Seeding](#database-seeding)
@@ -333,6 +339,21 @@ ORDER BY CurrentStock ASC
 - Service tests using in-memory fake repositories for `ProductService`, `StockService`, and `ReportService`.
 - Concurrency simulation verifying positive adjustments, zero adjustments, negative rejections, and retry limits.
 
+### 4. AI Inventory Replenishment Advisor (Full-Stack LLM Integration)
+- **API Endpoint:** `GET /api/reports/low-stock/summary?threshold=N`
+- **Frontend UI:** Interactive Razor MVC widget (`/stock`) powered by plain JavaScript (`stock.js`) and CSS (`stock.css`).
+- **Capabilities:**
+  - Aggregates at-risk inventory items below catalog reorder thresholds.
+  - Sends structured prompts to OpenAI's GPT API through an abstracted `ILlmClient`.
+  - Automatically parses and validates structured JSON responses into executive summaries, identified at-risk SKUs, and immediate purchase recommendations.
+  - Features accessible ARIA live states (`aria-live="polite"`), loading spinners, and graceful fallback when the LLM service is offline (HTTP 503).
+
+### 5. Enterprise Architecture & Modernization Whitepapers
+- **[.NET Framework 4.8 to .NET 8 Migration Whitepaper](docs/dotnet-framework-to-dotnet8-migration.md):** Architectural guide detailing the transition from legacy ASP.NET MVC 5 / `Global.asax` / EF6 to modern ASP.NET Core 8 / `Program.cs` / EF Core using the Strangler Fig pattern with YARP.
+- **[Multi-Channel Concurrency & Double-Selling Prevention](docs/cin7-multi-channel-inventory.md):** Deep dive into how optimistic concurrency (`rowversion`) eliminates stockouts and overselling across Shopify, Amazon, and retail POS.
+- **[SQL Server Indexing & Performance Strategy](docs/sql-server-indexing-and-performance.md):** Analysis of raw SQL execution plans, covered indexes, and Read Committed Snapshot Isolation (RCSI) for high-scale SaaS catalogs.
+- **[Microsoft Azure Deployment Guide](docs/deploy-azure.md):** Automated script-driven deployment targeting Azure App Service and Azure SQL Database.
+
 ---
 
 # Authentication & Authorization
@@ -493,18 +514,21 @@ Executed in `tests/js` via `npm test`:
 ```text
 PASS ./stock.test.js
   Stock Management Frontend Unit Tests
-    ✓ 200 path updates the DOM with success message and new quantity (38 ms)
-    ✓ 400 response shows validation messages from the response body (13 ms)
-    ✓ 404 response shows "product not found" (11 ms)
-    ✓ 409 response shows "stock would go negative" (6 ms)
-    ✓ 500 server error shows a retry message (7 ms)
-    ✓ network exception shows a retry message (4 ms)
-    ✓ submit button is disabled while request is in flight and re-enabled afterwards (3 ms)
-    ✓ product list renders an empty state when there are no products (3 ms)
-    ✓ product list renders rows using createElement and textContent, and allows row selection (23 ms)
+    ✓ 200 path updates the DOM with success message and new quantity (33 ms)
+    ✓ 400 response shows validation messages from the response body (8 ms)
+    ✓ 404 response shows "product not found" (6 ms)
+    ✓ 409 response shows "stock would go negative" (7 ms)
+    ✓ 500 server error shows a retry message (4 ms)
+    ✓ network exception shows a retry message (6 ms)
+    ✓ submit button is disabled while request is in flight and re-enabled afterwards (4 ms)
+    ✓ product list renders an empty state when there are no products (4 ms)
+    ✓ product list renders rows using createElement and textContent, and allows row selection (16 ms)
+    ✓ handleAiStockAnalysis 200 path renders AI summary, recommended action, and items (9 ms)
+    ✓ handleAiStockAnalysis handles 503 service unavailable cleanly (3 ms)
+    ✓ handleAiStockAnalysis handles network exceptions gracefully (5 ms)
 
 Test Suites: 1 passed, 1 total
-Tests:       9 passed, 9 total
+Tests:       12 passed, 12 total
 ```
 
 ### 3. End-to-End Tests (`Playwright & Chromium`)
