@@ -19,6 +19,11 @@ namespace InventoryManagementSystemAPI.Services.Implementations
 
         public async Task<StockAdjustmentResultDto> AdjustStockAsync(Guid productId, int delta)
         {
+            if (delta == 0)
+            {
+                throw new ArgumentException("Adjustment delta cannot be zero.", nameof(delta));
+            }
+
             for (int attempt = 1; attempt <= MaxRetries; attempt++)
             {
                 try
@@ -75,6 +80,11 @@ namespace InventoryManagementSystemAPI.Services.Implementations
             }
 
             locationId = locationId.Trim();
+
+            if (delta == 0)
+            {
+                throw new ArgumentException("Adjustment delta cannot be zero.", nameof(delta));
+            }
 
             for (int attempt = 1; attempt <= MaxRetries; attempt++)
             {

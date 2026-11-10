@@ -438,5 +438,53 @@ namespace InventoryManagementSystemAPI.Tests.Services
             Assert.Equal(40, whMain.Quantity);
             Assert.Equal(55, product.QuantityInStock);
         }
+
+        [Fact]
+        public async Task AdjustStockAsync_WhenDeltaIsZero_ThrowsArgumentException()
+        {
+            var fakeRepo = new FakeStockRepository();
+            var service = new StockService(fakeRepo);
+
+            var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+                service.AdjustStockAsync(Guid.NewGuid(), 0));
+
+            Assert.Contains("Adjustment delta cannot be zero", ex.Message);
+        }
+
+        [Fact]
+        public async Task AdjustStockAsync_WithLocation_WhenDeltaIsZero_ThrowsArgumentException()
+        {
+            var fakeRepo = new FakeStockRepository();
+            var service = new StockService(fakeRepo);
+
+            var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+                service.AdjustStockAsync(Guid.NewGuid(), "WH-MAIN", 0));
+
+            Assert.Contains("Adjustment delta cannot be zero", ex.Message);
+        }
+
+        [Fact]
+        public async Task AdjustStockAsync_WhenExceedsRetryLimit_ExhaustsExactThreeRetriesAndThrows()
+        {
+            var productId = Guid.NewGuid();
+            var product = new Product
+            {
+                Id = productId,
+                Name = "Widget",
+                SKU = "WDG-01",
+                QuantityInStock = 50
+            };
+            var fakeRepo = new FakeStockRepository(new[] { product })
+            {
+                ConcurrencyExceptionsToThrow = 10 // Guaranteed exhaustion
+            };
+            var service = new StockService(fakeRepo);
+
+            var ex = await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() =>
+                service.AdjustStockAsync(productId, -5));
+
+            Assert.NotNull(ex);
+            Assert.Equal(3, fakeRepo.UpdateCallsCount);
+        }
     }
 }

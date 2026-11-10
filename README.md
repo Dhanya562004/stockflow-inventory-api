@@ -469,11 +469,11 @@ The repository features comprehensive test automation across all layers:
 
 | Test Suite | Framework / Tool | Passed (Offline) | Skipped (Offline) | Passed (Full SQL) | Skipped (Full SQL) | Total | Note |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **.NET Core Test Suite** | xUnit / .NET 8 | **68** | **16** | **82** | **2** | **84** | Core validators, service business logic, fake repositories, and SQL Server integration tests |
+| **.NET Core Test Suite** | xUnit / .NET 8 | **75** | **16** | **89** | **2** | **91** | Core validators, service business logic, fake repositories, and SQL Server integration tests |
 | **JavaScript Unit Tests** | Jest 29 / jsdom | **12** | **0** | **12** | **0** | **12** | Client-side DOM manipulation, state handling, XSS prevention |
 | **End-to-End Tests** | Playwright | **1** | **0** | **1** | **0** | **1** | Browser submission flow and stock feedback |
 | **Legacy .NET Framework** | xUnit / Moq / .NET 4.8 | **10** | **1** | **11** | **0** | **11** | Isolated legacy MVC 5 and Web API 2 controller tests + real SQL ADO.NET test |
-| **Total Automated Tests** | | **91** | **17** | **106** | **2** | **108** | **100% passing across both offline and live SQL container environments** |
+| **Total Automated Tests** | | **98** | **17** | **113** | **2** | **115** | **100% passing across both offline and live SQL container environments** |
 
 > [!NOTE]
 > **Explanation of Skipped Tests in Local / Offline Runs:**
