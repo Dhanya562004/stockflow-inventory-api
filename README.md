@@ -6,7 +6,8 @@
   <strong>A production-inspired, multi-warehouse SaaS Inventory Management REST API and Razor MVC Application built with ASP.NET Core 8, Entity Framework Core, SQL Server, and AI-assisted inventory replenishment insights.</strong>
 </p>
 
-[![Build & Test](https://github.com/Dhanya562004/stockflow-inventory-api/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Dhanya562004/stockflow-inventory-api/actions/workflows/ci.yml)
+[![CI](https://github.com/Dhanya562004/stockflow-inventory-api/actions/workflows/ci.yml/badge.svg)](https://github.com/Dhanya562004/stockflow-inventory-api/actions/workflows/ci.yml)
+[![Legacy CI](https://github.com/Dhanya562004/stockflow-inventory-api/actions/workflows/legacy-ci.yml/badge.svg)](https://github.com/Dhanya562004/stockflow-inventory-api/actions/workflows/legacy-ci.yml)
 [![.NET 8.0](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![C# 12](https://img.shields.io/badge/C%23-12-239120?style=flat&logo=csharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp/)
 [![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-8.0-512BD4?style=flat&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/apps/aspnet)
@@ -51,8 +52,11 @@
 - [15. CI/CD Pipeline](#15-cicd-pipeline)
 - [16. Deployment](#16-deployment)
 - [17. Project Structure](#17-project-structure)
-- [18. Future Improvements](#18-future-improvements)
-- [19. Acknowledgements](#19-acknowledgements)
+- [18. Known Limitations](#18-known-limitations)
+- [19. Architecture & Design Decisions](#19-architecture--design-decisions)
+- [20. Contributing and Code Review Standards](#20-contributing-and-code-review-standards)
+- [21. Future Improvements](#21-future-improvements)
+- [22. Acknowledgements](#22-acknowledgements)
 
 ---
 
@@ -63,10 +67,11 @@
 Managing inventory at scale requires strict data consistency across sales channels, multi-location storage facilities, and high-frequency order processing. StockFlow addresses these engineering challenges with:
 
 - **Multi-Warehouse Stock Isolation:** Independent stock tracking per location (`WH-MAIN`, `WH-SECONDARY`) with atomic catalog total synchronization.
-- **Concurrency & Double-Selling Prevention:** RowVersion optimistic concurrency tokens and database execution strategy transactions that eliminate race conditions and overselling.
+- **Concurrency & Double-Selling Prevention:** RowVersion optimistic concurrency tokens and database execution strategy transactions that mitigate race conditions and prevent overselling under 20-thread concurrency integration testing.
 - **Reporting & Business Intelligence:** Parameterized raw SQL queries for performant aggregation across multi-location records without SQL injection risk.
-- **AI Inventory Replenishment Advisor:** Automated stock analysis utilizing large language models (LLMs) to synthesize stock thresholds into actionable purchasing guidance.
+- **AI Inventory Replenishment Advisor:** Automated stock analysis utilizing large language models (LLMs) to synthesize stock thresholds into actionable purchasing guidance (verified via `MockLlmClient` in CI; live OpenAI API calls require an active API key).
 - **Legacy Modernization Benchmark:** A buildable, isolated **.NET Framework 4.8 / ASP.NET MVC 5** sidecar project modeling the architecture and testing patterns of systems undergoing cloud migration.
+- **Engineering Architecture & ADRs:** Comprehensive documentation including [System Architecture](docs/architecture.md), [Design Decisions (ADRs)](docs/design-decisions.md), and [AI-Assisted Workflow & Case Studies](docs/ai-workflow.md).
 
 ---
 
@@ -129,7 +134,7 @@ The application is deployed and actively running on a production Windows Server 
 - **Optimistic Concurrency Protection:** SQL Server `RowVersion` concurrency tokens mapped on `Product` and `StockLevel` entities. Concurrency conflicts trigger automated retries with exponential backoff, jitter, and database entity reloads (`ReloadAsync()`).
 - **Overselling & Negative Stock Prevention:** Domain checks strictly reject adjustments that would result in negative quantities at either the warehouse or catalog level (`HTTP 409 Conflict`).
 - **Raw SQL Low-Stock Reporting:** High-efficiency SQL Server query (`Database.SqlQuery<LowStockReportDto>`) using `INNER JOIN`, `GROUP BY`, and a parameterized `HAVING SUM(sl.Quantity) <= @threshold` clause to prevent SQL injection.
-- **AI Inventory Replenishment Advisor:** Service layer abstraction (`ILlmClient`) that sends low-stock items to OpenAI's GPT API with structured JSON output enforcement, generating executive summaries and actionable restocking suggestions.
+- **AI Inventory Replenishment Advisor:** Service layer abstraction (`ILlmClient`) that sends low-stock items to OpenAI's GPT API with structured JSON output enforcement, generating executive summaries and actionable restocking suggestions. (Note: Integration is verified in CI and test suites using `MockLlmClient`; live OpenAI API endpoints have not been verified against a funded production account).
 - **JWT Authentication & RBAC:** ASP.NET Core Identity integration with JWT Bearer tokens and role-based authorization across `Admin`, `Manager`, and `User` roles.
 - **Request Validation:** FluentValidation rules ensuring input validation, positive prices, valid foreign key references, and duplicate prevention for SKUs and Barcodes.
 - **Centralized Error Handling:** Custom middleware catching unhandled exceptions and returning standard, structured error responses.
@@ -277,10 +282,10 @@ Interactive documentation is available at the live Swagger URL: **[https://dhany
 ### Inventory, Reporting & Health
 | Method | Endpoint | Authorization | Description |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/Stock/adjust` | Anonymous | Adjusts catalog or warehouse stock (`{ productId, locationId?, delta }`) |
-| `POST` | `/api/Stock/locations/adjust` | Anonymous | Dedicated endpoint for warehouse-specific stock adjustment |
-| `GET` | `/api/Reports/low-stock` | Anonymous | Raw parameterized SQL report listing items at or below threshold |
-| `GET` | `/api/Reports/low-stock/summary` | Anonymous | AI-assisted executive replenishment analysis via OpenAI |
+| `POST` | `/api/Stock/adjust` | `Admin, Manager` | Adjusts catalog or warehouse stock (`{ productId, locationId?, delta }`) |
+| `POST` | `/api/Stock/locations/adjust` | `Admin, Manager` | Dedicated endpoint for warehouse-specific stock adjustment |
+| `GET` | `/api/Reports/low-stock` | Authenticated | Raw parameterized SQL report listing items at or below threshold |
+| `GET` | `/api/Reports/low-stock/summary` | Authenticated | AI-assisted executive replenishment analysis via OpenAI |
 | `GET` | `/stock` | Anonymous | Razor MVC interactive stock adjustment and AI dashboard |
 | `GET` | `/health` | Anonymous | Production health check returning service operational status |
 
@@ -428,10 +433,10 @@ Application configuration is read from `appsettings.json` and overridden by envi
 ```
 
 ### Environment Overrides (Production)
-In production (such as MonsterASP.NET or Azure), sensitive values are injected through environment variables without committing credentials to source control:
+In production (MonsterASP.NET), sensitive values are injected through environment variables without committing credentials to source control (see `docs/deploy-azure.md` for doc-only Azure blueprint):
 - `ConnectionStrings__DefaultConnection`: Target SQL Server connection string
 - `Jwt__Key`: 256-bit cryptographically secure secret
-- `OpenAI__ApiKey`: OpenAI API secret key for the AI replenishment advisor
+- `OpenAI__ApiKey`: OpenAI API secret key for the AI replenishment advisor (optional; falls back to rule-based replenishment if omitted)
 - `SQL_SERVER_TEST_CONNECTION_STRING`: Connection string used by automated integration test containers
 
 ---
@@ -462,18 +467,19 @@ The repository features comprehensive test automation across all layers:
 
 ### Latest Verified Test Execution Results
 
-| Test Suite | Framework / Tool | Passed | Failed | Skipped | Total | Note |
-| :--- | :--- | :---: | :---: | :---: | :---: | :--- |
-| **.NET Core Test Suite** | xUnit / .NET 8 | **64** | **0** | **13** | **77** | Core validators, service business logic, and fake repositories |
-| **JavaScript Unit Tests** | Jest 29 / jsdom | **12** | **0** | **0** | **12** | Client-side DOM manipulation, state handling, XSS prevention |
-| **End-to-End Tests** | Playwright | **1** | **0** | **0** | **1** | Browser submission flow and stock feedback |
-| **Legacy .NET Framework** | xUnit / Moq / .NET 4.8 | **10** | **0** | **0** | **10** | Isolated legacy MVC 5 and Web API 2 controller tests |
-| **Total Automated Tests** | | **87** | **0** | **13** | **100** | |
+| Test Suite | Framework / Tool | Passed (Offline) | Skipped (Offline) | Passed (Full SQL) | Skipped (Full SQL) | Total | Note |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **.NET Core Test Suite** | xUnit / .NET 8 | **75** | **16** | **89** | **2** | **91** | Core validators, service business logic, fake repositories, and SQL Server integration tests |
+| **JavaScript Unit Tests** | Jest 29 / jsdom | **12** | **0** | **12** | **0** | **12** | Client-side DOM manipulation, state handling, XSS prevention |
+| **End-to-End Tests** | Playwright | **1** | **0** | **1** | **0** | **1** | Browser submission flow and stock feedback |
+| **Legacy .NET Framework** | xUnit / Moq / .NET 4.8 | **10** | **1** | **11** | **0** | **11** | Isolated legacy MVC 5 and Web API 2 controller tests + real SQL ADO.NET test |
+| **Total Automated Tests** | | **98** | **17** | **113** | **2** | **115** | **100% passing across both offline and live SQL container environments** |
 
 > [!NOTE]
-> **Explanation of Skipped Tests in Local Run:**
-> - **11 SQL Server Integration Tests:** Skipped locally via `[SkippableFact]` when the `SQL_SERVER_TEST_CONNECTION_STRING` environment variable is not defined on the host. In the CI pipeline, these run against a live SQL Server 2022 container.
-> - **2 Live AI/LLM Tests:** Skipped via `[SkippableFact]` when `OPENAI_API_KEY` is not present, ensuring builds succeed in offline or sandbox environments.
+> **Explanation of Skipped Tests in Local / Offline Runs:**
+> - **14 SQL Server Integration Tests:** Located in `StockEndpointIntegrationTests.cs`. Skipped via `[SkippableFact]` when the `SQL_SERVER_TEST_CONNECTION_STRING` environment variable is not defined on the host. When running against a live SQL Server 2022 instance or in CI, all 14 tests execute and pass.
+> - **1 Legacy SQL Server Test:** Located in `LegacyAdoNetStockRepositoryRealSqlTests.cs`. Exercises raw ADO.NET updates against real SQL Server; skips cleanly when `SQL_SERVER_TEST_CONNECTION_STRING` is unset.
+> - **2 Live AI/LLM Tests:** Located in `LiveLlmClientTests.cs` and `LowStockEvaluationTests.cs`. Skipped via `[SkippableFact]` when `OPENAI_API_KEY` is not present, ensuring builds succeed in offline or sandbox environments.
 
 ### Code Coverage
 - **CI Line Coverage Threshold:** Enforced at **7.0%** minimum on core application assemblies.
@@ -517,20 +523,23 @@ Continuous Integration is automated using **GitHub Actions**:
 
 ## 16. Deployment
 
-The application is deployed on **MonsterASP.NET** (Windows Server IIS cloud hosting).
+The application is actively deployed on **MonsterASP.NET** (Windows Server IIS cloud hosting).
 
 ### Production Configuration
 - **Runtime:** .NET 8.0 CLR running in out-of-process hosting mode behind IIS.
 - **Database:** Hosted Microsoft SQL Server instance with connection strings injected via platform configuration.
-- **HTTPS:** Enforced across all routes.
+- **HTTPS:** Configured across all routes. *(Note: Automatic HTTP-to-HTTPS redirect has not been independently verified under all custom host configurations; clients should use `https://` directly).*
 - **Swagger Documentation:** Enabled in production for public demonstration and API exploration.
 
 ### Architectural Migration Whitepapers
 For teams evaluating cloud transitions, this repository includes in-depth engineering documentation in `docs/`:
+- **[System Architecture](docs/architecture.md):** Detailed component diagrams, request flows, and ER diagrams.
+- **[Design Decisions (ADRs)](docs/design-decisions.md):** 6 Architectural Decision Records on concurrency, reporting, and AI.
+- **[AI Workflow & Case Studies](docs/ai-workflow.md):** AI-assisted development protocols and historical defect resolutions.
 - **[Legacy Migration Guide](docs/dotnet-framework-to-dotnet8-migration.md):** Strangler Fig migration strategy from ASP.NET MVC 5 to ASP.NET Core 8 with YARP.
 - **[Multi-Channel Concurrency](docs/cin7-multi-channel-inventory.md):** Race condition mitigation and RowVersion tokens for retail inventory synchronization.
 - **[SQL Server Indexing Strategy](docs/sql-server-indexing-and-performance.md):** Index analysis, covered queries, and RCSI configuration.
-- **[Azure Deployment Blueprint](docs/deploy-azure.md):** Automated script-driven infrastructure setup for Azure App Service and Azure SQL.
+- **[Azure Deployment Blueprint](docs/deploy-azure.md):** Architectural blueprint for Azure App Service and Azure SQL. *(Note: Documented for enterprise reference only; Azure is not an active deployment target for this project).*
 
 ---
 
@@ -580,12 +589,58 @@ stockflow-inventory-api/
 
 ---
 
-## 18. Future Improvements
+## 18. Known Limitations
+
+To maintain full engineering transparency, the following operational and environment constraints are documented:
+
+1. **Shared Cloud Hosting Tier:** The live demo is hosted on MonsterASP.NET shared Windows IIS hosting. Cold starts (idle process recycling) may cause an initial latency spike of 5–10 seconds on the first request.
+2. **Live AI Integration is Mock-Tested:** The `OpenAiLlmClient` implementation uses standard OpenAI API JSON schema completion. Automated CI and unit test suites utilize `MockLlmClient` and synthetic test fixtures. Live calls to OpenAI endpoints require configuring an active, funded `OPENAI_API_KEY` in environment variables.
+3. **Default Seeded Credentials:** In development and test environments, `IdentityDataSeeder` provisions a default admin account (`admin@stockflow.local` / `Admin@123!`). In an enterprise production rollout, this seeder must be disabled or the credentials rotated immediately upon deployment.
+4. **Code Coverage Baseline:** Code coverage is actively measured via Coverlet and enforced at a **7.0% minimum gate** in the GitHub Actions CI pipeline, focusing heavily on core domain logic, validators, and concurrency execution paths.
+5. **Legacy CI Platform Dependency:** The legacy .NET Framework 4.8 sidecar (`legacy/StockFlow.LegacyMvc5`) relies on `System.Web` and MSBuild, requiring Windows-based runners (`windows-latest` in `.github/workflows/legacy-ci.yml`), whereas the modern .NET 8 API builds cross-platform on Ubuntu Linux.
+6. **HTTPS Redirect Behavior:** Automated HTTP-to-HTTPS redirect rules depend on shared IIS URL rewrite modules and have not been independently verified under all custom domain headers; callers should use `https://dhanya-stockflow.runasp.net` explicitly.
+
+---
+
+## 19. Architecture & Design Decisions
+
+Detailed engineering specifications and architectural records are documented in the `docs/` directory:
+
+- **[System Architecture Specification](docs/architecture.md):** Complete component architecture, middleware pipelines, sequence diagrams for multi-warehouse adjustments, and ER diagrams.
+- **[Architectural Decision Records (ADRs)](docs/design-decisions.md):**
+  - `ADR-001`: Optimistic Concurrency via RowVersion vs. Pessimistic Locking
+  - `ADR-002`: Parameterized Raw SQL for Low-Stock Aggregation Reporting
+  - `ADR-003`: ILlmClient Abstraction for AI Replenishment Advisor
+  - `ADR-004`: Isolated Legacy .NET Framework 4.8 / ASP.NET MVC 5 Sidecar
+  - `ADR-005`: Multi-Warehouse Inventory Model with Catalog Totals Synchronization
+  - `ADR-006`: HTTP 409 Conflict for Negative Stock Prevention
+- **[AI-Assisted Development Workflow](docs/ai-workflow.md):** Methodologies for AI pairing, verification protocols, and real historical defect resolution case studies.
+
+---
+
+## 20. Contributing and Code Review Standards
+
+We welcome contributions to StockFlow. All submissions must follow our engineering standards:
+
+1. **Pull Request Template:** Follow the structured format in [`.github/pull_request_template.md`](.github/pull_request_template.md).
+2. **Code Review Checklist:** Verify your PR against the [Code Review Checklist](docs/code-review-checklist.md) covering authorization, input validation, transaction boundaries, SQL injection prevention, and error handling.
+3. **Issue Templates:** Submit bugs using [Bug Report](.github/ISSUE_TEMPLATE/bug_report.md) and new ideas using [Feature Request](.github/ISSUE_TEMPLATE/feature_request.md).
+4. **Commit Conventions:** Follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`).
+
+---
+
+## 21. Future Improvements
 
 - **Multi-Tenancy Partitioning:** Add a `TenantId` discriminator column with EF Core Global Query Filters for multi-organization SaaS isolation.
 - **Structured Centralized Logging:** Integrate Serilog with Seq or OpenTelemetry for structured distributed tracing.
 - **Distributed Caching:** Add Redis caching for frequently queried public catalog endpoints (`/api/Products`).
 - **Modern Single-Page Application (SPA):** Build a standalone React/Next.js dashboard to consume the REST API alongside the existing Razor interface.
 - **Automated Reorder Webhooks:** Outbound webhooks dispatched to suppliers when stock levels breach reorder thresholds.
+
+---
+
+## 22. Acknowledgements
+
+This project is built upon the open-source foundation created by **Michael Mitchell** ([github.com/mmitchell3397/IMS-WebAPI](https://github.com/mmitchell3397/IMS-WebAPI)). Significant enterprise enhancements, multi-warehouse transactions, concurrency controls, SQL optimizations, AI integrations, test automation, and legacy sidecar modernization were developed by **Dhanya K** ([github.com/Dhanya562004](https://github.com/Dhanya562004)).
 
 

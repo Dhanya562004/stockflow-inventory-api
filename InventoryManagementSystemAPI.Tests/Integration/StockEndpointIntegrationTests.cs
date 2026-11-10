@@ -3,6 +3,8 @@ using System.Net.Http.Json;
 using InventoryManagementSystemAPI.Data;
 using InventoryManagementSystemAPI.DTOs.Stock;
 using InventoryManagementSystemAPI.Models;
+using InventoryManagementSystemAPI.Models.Identity;
+using InventoryManagementSystemAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -91,12 +93,79 @@ namespace InventoryManagementSystemAPI.Tests.Integration
             return productId;
         }
 
+        private static HttpClient CreateAuthenticatedClient(CustomWebApplicationFactory factory, string role = "Manager")
+        {
+            var client = factory.CreateClient();
+            using var scope = factory.Services.CreateScope();
+            var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+            var testUser = new ApplicationUser
+            {
+                Id = Guid.NewGuid().ToString(),
+                Email = $"{role.ToLower()}_{Guid.NewGuid():N}@example.com",
+                FirstName = "Integration",
+                LastName = role
+            };
+            var token = tokenService.CreateToken(testUser, new[] { role });
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            return client;
+        }
+
+        [SkippableFact]
+        public async Task PostAdjust_WhenAnonymous_Returns401()
+        {
+            EnsureSqlServerAvailable();
+            var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
+            var client = factory.CreateClient();
+
+            var response = await client.PostAsJsonAsync("/api/stock/adjust", new AdjustStockDto
+            {
+                ProductId = Guid.NewGuid(),
+                Delta = 5
+            });
+
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [SkippableFact]
+        public async Task PostAdjust_WhenUserRole_Returns403()
+        {
+            EnsureSqlServerAvailable();
+            var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
+            var client = CreateAuthenticatedClient(factory, "User");
+
+            var response = await client.PostAsJsonAsync("/api/stock/adjust", new AdjustStockDto
+            {
+                ProductId = Guid.NewGuid(),
+                Delta = 5
+            });
+
+            Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+
+        [SkippableFact]
+        public async Task PostAdjust_WhenManagerRole_Returns200OnValidAdjustment()
+        {
+            EnsureSqlServerAvailable();
+            var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
+            var client = CreateAuthenticatedClient(factory, "Manager");
+
+            var productId = await SeedProductAsync(factory, 10);
+
+            var response = await client.PostAsJsonAsync("/api/stock/adjust", new AdjustStockDto
+            {
+                ProductId = productId,
+                Delta = 5
+            });
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
         [SkippableFact]
         public async Task PostAdjust_WhenValidAdjustment_Returns200WithNewQuantity()
         {
             EnsureSqlServerAvailable();
             var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
-            var client = factory.CreateClient();
+            var client = CreateAuthenticatedClient(factory, "Manager");
 
             var productId = await SeedProductAsync(factory, 10);
 
@@ -114,7 +183,7 @@ namespace InventoryManagementSystemAPI.Tests.Integration
         {
             EnsureSqlServerAvailable();
             var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
-            var client = factory.CreateClient();
+            var client = CreateAuthenticatedClient(factory, "Manager");
 
             using (var scope = factory.Services.CreateScope())
             {
@@ -136,7 +205,7 @@ namespace InventoryManagementSystemAPI.Tests.Integration
         {
             EnsureSqlServerAvailable();
             var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
-            var client = factory.CreateClient();
+            var client = CreateAuthenticatedClient(factory, "Manager");
 
             var productId = await SeedProductAsync(factory, 5);
 
@@ -154,7 +223,7 @@ namespace InventoryManagementSystemAPI.Tests.Integration
         {
             EnsureSqlServerAvailable();
             var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
-            var client = factory.CreateClient();
+            var client = CreateAuthenticatedClient(factory, "Manager");
 
             var response = await client.PostAsJsonAsync("/api/stock/adjust", new AdjustStockDto
             {
@@ -171,7 +240,7 @@ namespace InventoryManagementSystemAPI.Tests.Integration
             EnsureSqlServerAvailable();
             var connectionString = GetTestConnectionString()!;
             var factory = new CustomWebApplicationFactory(connectionString);
-            var client = factory.CreateClient();
+            var client = CreateAuthenticatedClient(factory, "Manager");
 
             var productId = await SeedProductAsync(factory, 10);
 
@@ -225,7 +294,7 @@ namespace InventoryManagementSystemAPI.Tests.Integration
         {
             EnsureSqlServerAvailable();
             var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
-            var client = factory.CreateClient();
+            var client = CreateAuthenticatedClient(factory, "Manager");
 
             var (productId, locationId) = await SeedProductWithWarehouseStockAsync(factory, 20, "WH-MAIN");
 
@@ -252,7 +321,7 @@ namespace InventoryManagementSystemAPI.Tests.Integration
         {
             EnsureSqlServerAvailable();
             var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
-            var client = factory.CreateClient();
+            var client = CreateAuthenticatedClient(factory, "Manager");
 
             var (productId, _) = await SeedProductWithWarehouseStockAsync(factory, 10, "WH-MAIN");
 
@@ -271,7 +340,7 @@ namespace InventoryManagementSystemAPI.Tests.Integration
         {
             EnsureSqlServerAvailable();
             var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
-            var client = factory.CreateClient();
+            var client = CreateAuthenticatedClient(factory, "Manager");
 
             var (productId, locationId) = await SeedProductWithWarehouseStockAsync(factory, 5, "WH-MAIN");
 
@@ -290,7 +359,7 @@ namespace InventoryManagementSystemAPI.Tests.Integration
         {
             EnsureSqlServerAvailable();
             var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
-            var client = factory.CreateClient();
+            var client = CreateAuthenticatedClient(factory, "Manager");
 
             var (productId, locationId) = await SeedProductWithWarehouseStockAsync(factory, 15, "WH-MAIN");
 
@@ -309,7 +378,7 @@ namespace InventoryManagementSystemAPI.Tests.Integration
         {
             EnsureSqlServerAvailable();
             var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
-            var client = factory.CreateClient();
+            var client = CreateAuthenticatedClient(factory, "Manager");
 
             var response = await client.PostAsJsonAsync("/api/stock/locations/adjust", new AdjustWarehouseStockDto
             {
@@ -327,7 +396,7 @@ namespace InventoryManagementSystemAPI.Tests.Integration
             EnsureSqlServerAvailable();
             var connectionString = GetTestConnectionString()!;
             var factory = new CustomWebApplicationFactory(connectionString);
-            var client = factory.CreateClient();
+            var client = CreateAuthenticatedClient(factory, "Manager");
 
             var (productId, locationId) = await SeedProductWithWarehouseStockAsync(factory, 10, "WH-MAIN");
 
