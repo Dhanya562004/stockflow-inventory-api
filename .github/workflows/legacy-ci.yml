@@ -2,7 +2,7 @@ name: Legacy .NET Framework CI
 
 on:
   push:
-    branches: [ "main", "feature/*" ]
+    branches: [ "main", "feature/*", "feat/*" ]
     paths:
       - 'legacy/**'
       - '.github/workflows/legacy-ci.yml'
@@ -26,11 +26,14 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
-    - name: Restore dependencies
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Restore NuGet packages
       run: dotnet restore legacy/StockFlow.Legacy.sln
 
-    - name: Build legacy solution
-      run: dotnet build legacy/StockFlow.Legacy.sln --configuration Release --no-restore
+    - name: Build legacy solution with MSBuild
+      run: msbuild legacy/StockFlow.Legacy.sln /p:Configuration=Release
 
     - name: Execute legacy unit tests
       run: dotnet test legacy/StockFlow.Legacy.sln --configuration Release --no-build --verbosity normal
