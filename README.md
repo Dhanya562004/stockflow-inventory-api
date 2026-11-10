@@ -535,85 +535,31 @@ https://localhost:7011/stock
 
 # Test Results
 
-### 1. .NET Test Suite (`xUnit`)
-Executed with `dotnet test`:
+### .NET Tests (xUnit)
 
-- **Local Execution:**
-  ```text
-  Passed!  - Failed:     0, Passed:    41, Skipped:     7, Total:    48, Duration: 578 ms - InventoryManagementSystemAPI.Tests.dll (net8.0)
-  ```
-  *(7 skipped locally: 5 container integration tests skipped when local SQL Server is unavailable; 2 live tests skipped when `LLM_API_KEY` is not set)*
+Latest local execution: 64 passed, 0 failed, 13 skipped (77 total).
+- 11 SQL Server integration tests skipped locally.
+- 2 live AI/LLM tests skipped because external API credentials were unavailable.
 
-- **GitHub Actions CI Execution (with live SQL Server 2022 container):**
-  ```text
-  Passed!  - Failed:     0, Passed:    46, Skipped:     2, Total:    48
-  ```
-  *(0 integration tests skipped in CI; all 5 container integration tests passed; 2 live LLM tests skipped as expected without external API key)*
+### JavaScript Tests (Jest)
 
-#### .NET Test Suite Breakdown
-- **Validation Tests (22 tests):** SKU max length, empty SKU rejection, positive price and cost requirements, non-negative quantities, reorder level constraints, valid foreign key GUID rules, stock adjustment delta validation.
-- **Product Service Tests (6 tests):** Duplicate SKU prevention, duplicate barcode detection, retrieval, update, and deletion rules without database dependencies.
-- **Stock Adjustment Service Tests (6 tests):** Valid adjustments staying positive, adjustments hitting exactly zero, adjustments rejected due to negative balance, transient concurrency retry recovery, and exceeding retry limits (3 attempts).
-- **Reports & Low-Stock Tests (6 tests):** Low-stock report filtering products strictly at or below threshold, negative threshold rejection, structured LLM summary 200 response, 502 Bad Gateway on malformed JSON, 502 on schema violations, 503 on external provider exceptions, and friendly empty-catalog messaging.
-- **Stock View & Controller Tests (2 tests):** Razor view returns valid ViewResult and form action / script references match `/api/stock/adjust`.
-- **Golden Evaluation Runner (1 test covering 10 scenarios):** Deterministic fact verification across 10 warehouse inventory scenarios.
-- **Integration Tests (5 tests):** `WebApplicationFactory` endpoint coverage (200, 404, 409, 400) and 20-client concurrent adjustment test against SQL Server container. All 5 executed and passed in CI.
+12 passed, 0 failed.
 
-### 2. JavaScript Unit Tests (`Jest & jsdom`)
-Executed in `tests/js` via `npm test`:
+### End-to-End Tests (Playwright)
 
-```text
-PASS ./stock.test.js
-  Stock Management Frontend Unit Tests
-    ✓ 200 path updates the DOM with success message and new quantity (33 ms)
-    ✓ 400 response shows validation messages from the response body (8 ms)
-    ✓ 404 response shows "product not found" (6 ms)
-    ✓ 409 response shows "stock would go negative" (7 ms)
-    ✓ 500 server error shows a retry message (4 ms)
-    ✓ network exception shows a retry message (6 ms)
-    ✓ submit button is disabled while request is in flight and re-enabled afterwards (4 ms)
-    ✓ product list renders an empty state when there are no products (4 ms)
-    ✓ product list renders rows using createElement and textContent, and allows row selection (16 ms)
-    ✓ handleAiStockAnalysis 200 path renders AI summary, recommended action, and items (9 ms)
-    ✓ handleAiStockAnalysis handles 503 service unavailable cleanly (3 ms)
-    ✓ handleAiStockAnalysis handles network exceptions gracefully (5 ms)
+1 browser test passed.
 
-Test Suites: 1 passed, 1 total
-Tests:       12 passed, 12 total
-```
+### Legacy .NET Framework Tests
 
-### 3. End-to-End Tests (`Playwright & Chromium`)
-Executed in `tests/js` via `npx playwright test` against running app on `http://localhost:5228`:
+10 passed, 0 failed, 0 skipped.
 
-```text
-Running 1 test using 1 worker
-  ok 1 [chromium] › e2e/stock.spec.js:4:5 › Stock Page E2E › opens /stock, submits an adjustment, and checks displayed quantity (1.3s)
-  1 passed (4.1s)
-```
+### Code Coverage
 
-### 4. Legacy .NET Framework Test Suite (`xUnit & Moq`)
-Executed in `legacy` via `dotnet test legacy/StockFlow.Legacy.sln`:
-
-```text
-Test run for legacy\StockFlow.LegacyMvc5.Tests\bin\Debug\net48\StockFlow.LegacyMvc5.Tests.dll (.NETFramework,Version=v4.8)
-VSTest version 17.11.1 (x64)
-
-Starting test execution, please wait...
-A total of 1 test files matched the specified pattern.
-
-Passed!  - Failed:     0, Passed:    10, Skipped:     0, Total:    10, Duration: 377 ms - StockFlow.LegacyMvc5.Tests.dll (net48)
-```
-- **Web API 2 Controller Tests (6 tests):** Valid adjustments returning 200 with new quantity, non-existent product returning 404, negative resulting balance returning 409 Conflict, delta zero returning 400 Bad Request, successful retrieval returning 200, unknown retrieval returning 404.
-- **MVC 5 Controller Tests (4 tests):** Index returning ViewResult with all products and framework banner, invalid model state returning ViewResult with error message, valid adjustment redirecting to Index with TempData success message, adjustment failure returning ViewResult with error message.
-
-### 5. Code Coverage Baseline
-Measured using Coverlet in Cobertura XML format:
-- **Line Coverage Baseline (Unit Tests Only):** 7.26% (336 covered / 4,623 valid lines)
-- **Line Coverage in CI (Including SQL Server Integration Tests):** 15.48% (716 covered / 4,625 valid lines)
-- **CI Quality Gate:** Enforces line coverage $\ge$ 7.0% (Passed)
+- CI line coverage threshold: 7.0%.
+- Coverlet generates Cobertura coverage reports.
+- CI uploads test and coverage artifacts.
 
 ---
-
 # Verification
 
 Reviewers can independently verify each component using the exact commands below:
@@ -652,13 +598,15 @@ cd ../..
 
 # CI Pipeline
 
-The project features an automated GitHub Actions CI pipeline ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) configured with caching, multiple parallel jobs, and strict quality gates:
+The project uses GitHub Actions through [`.github/workflows/ci.yml`](.github/workflows/ci.yml). The workflow runs on pushes and pull requests targeting `main`.
 
-| Job | Environment & Tools | What It Proves |
+| Job | Environment & Tools | What It Does |
 | :--- | :--- | :--- |
-| **`.NET Build, Test & Coverage`** | Ubuntu, .NET 8, SQL Server 2022 service container, Coverlet | Verifies compilation in Release mode, runs all 48 .NET tests against a live SQL Server instance, guarantees zero integration tests are skipped in CI via automated TRX inspection, enforces a minimum 7.0% line coverage gate against the measured baseline (7.26%), and uploads TRX and Cobertura XML artifacts. |
-| **`JavaScript Unit Tests`** | Ubuntu, Node.js 20, Jest, jsdom | Proves `wwwroot/js/stock.js` correctly handles every HTTP status code (200, 400 validation, 404, 409 negative balance, 500 retry), updates DOM via `textContent` (preventing XSS), manages button loading states, and renders product catalog tables and empty states without framework dependencies. |
-| **`Playwright E2E Tests`** | Ubuntu, Node.js 20, .NET 8, Chromium | Starts the ASP.NET Core web server on Kestrel (`http://localhost:5228`), boots headless Chromium, navigates to `/stock`, fills the form, submits an adjustment, and verifies end-to-end rendering and quantity updates in a real browser. |
+| **.NET Build, Test & Coverage** | Ubuntu, .NET 8, SQL Server 2022, Coverlet | Builds the application, runs .NET tests against SQL Server, checks integration-test execution, enforces a minimum 7.0% line coverage threshold, and uploads test and coverage reports. |
+| **JavaScript Unit Tests** | Ubuntu, Node.js 20, Jest, jsdom | Installs dependencies and runs frontend unit tests. |
+| **Playwright E2E Tests** | Ubuntu, .NET 8, Node.js 20, Chromium | Builds and starts the application, checks server readiness, runs browser tests, and uploads the Playwright report. |
+
+The workflow also uses dependency caching to reduce repeated restore and installation time.
 
 ---
 
