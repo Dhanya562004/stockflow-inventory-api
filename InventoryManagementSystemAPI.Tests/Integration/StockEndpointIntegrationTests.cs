@@ -320,5 +320,45 @@ namespace InventoryManagementSystemAPI.Tests.Integration
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
+
+        [SkippableFact]
+        public async Task PostAdjust_WithWarehouseLocation_Concurrency_20ParallelCalls_10Succeed_10Conflict_FinalZero()
+        {
+            EnsureSqlServerAvailable();
+            var connectionString = GetTestConnectionString()!;
+            var factory = new CustomWebApplicationFactory(connectionString);
+            var client = factory.CreateClient();
+
+            var (productId, locationId) = await SeedProductWithWarehouseStockAsync(factory, 10, "WH-MAIN");
+
+            var tasks = Enumerable.Range(0, 20).Select(_ =>
+                client.PostAsJsonAsync("/api/stock/adjust", new AdjustStockDto
+                {
+                    ProductId = productId,
+                    LocationId = locationId,
+                    Delta = -1
+                })
+            );
+
+            var responses = await Task.WhenAll(tasks);
+
+            var successCount = responses.Count(r => r.StatusCode == HttpStatusCode.OK);
+            var conflictCount = responses.Count(r => r.StatusCode == HttpStatusCode.Conflict);
+
+            Assert.Equal(10, successCount);
+            Assert.Equal(10, conflictCount);
+
+            using (var scope = factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var stockLevel = await db.StockLevels.AsNoTracking().FirstAsync(s => s.ProductId == productId && s.LocationId == locationId);
+                var product = await db.Products.AsNoTracking().FirstAsync(p => p.Id == productId);
+
+                Assert.Equal(0, stockLevel.Quantity);
+                Assert.Equal(0, product.QuantityInStock);
+                Assert.False(stockLevel.Quantity < 0);
+                Assert.False(product.QuantityInStock < 0);
+            }
+        }
     }
 }
