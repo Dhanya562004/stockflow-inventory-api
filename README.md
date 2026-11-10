@@ -481,7 +481,8 @@ The repository features comprehensive test automation across all layers:
 > - **1 Legacy SQL Server Test:** Located in `LegacyAdoNetStockRepositoryRealSqlTests.cs`. Exercises raw ADO.NET updates against real SQL Server; skips cleanly when `SQL_SERVER_TEST_CONNECTION_STRING` is unset.
 > - **2 Live AI/LLM Tests:** Located in `LiveLlmClientTests.cs` and `LowStockEvaluationTests.cs`. Skipped via `[SkippableFact]` when `OPENAI_API_KEY` is not present, ensuring builds succeed in offline or sandbox environments.
 
-### Code Coverage
+### Code Coverage & Continuous Integration
+- **Legacy CI Status:** [Passing (Run #42837730376)](https://github.com/Dhanya562004/stockflow-inventory-api/actions/runs/42837730376) — Verified `success` on Windows Server runner with MSBuild and xUnit/Moq test execution.
 - **CI Line Coverage Threshold:** Enforced at **7.0%** minimum on core application assemblies.
 - **Coverage Tooling:** Coverlet generates Cobertura XML reports uploaded as CI build artifacts.
 
@@ -517,6 +518,7 @@ Continuous Integration is automated using **GitHub Actions**:
   - **Steps:** Dependency restoration, .NET compilation, SQL Server integration test execution, Coverlet code coverage enforcement (7.0% threshold), Jest JavaScript test execution, and Playwright Chromium browser tests.
 - **Legacy Pipeline ([`.github/workflows/legacy-ci.yml`](.github/workflows/legacy-ci.yml)):**
   - **Runner:** Windows Latest
+  - **Status:** [Passing (Run #42837730376)](https://github.com/Dhanya562004/stockflow-inventory-api/actions/runs/42837730376) (Conclusion: `success`)
   - **Steps:** MSBuild restoration and compilation of `.NET Framework 4.8` assemblies, running Moq unit tests in `StockFlow.LegacyMvc5.Tests`.
 
 ---
