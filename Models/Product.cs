@@ -6,7 +6,7 @@ namespace InventoryManagementSystemAPI.Models
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string SKU { get; set; } = string.Empty;
-        public string Barcode {  get; set; } = string.Empty;
+        public string Barcode { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public decimal Cost { get; set; }
         public int QuantityInStock { get; set; }
@@ -16,7 +16,7 @@ namespace InventoryManagementSystemAPI.Models
         public byte[] RowVersion { get; set; } = [];
 
         // Relationships
-        public Guid CategoryId { get; set; } 
+        public Guid CategoryId { get; set; }
         public Category? Category { get; set; }
         public Guid SupplierId { get; set; }
         public Supplier? Supplier { get; set; }

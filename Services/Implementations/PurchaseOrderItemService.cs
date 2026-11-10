@@ -1,4 +1,4 @@
-﻿using InventoryManagementSystemAPI.DTOs.PurchaseOrderItem;
+using InventoryManagementSystemAPI.DTOs.PurchaseOrderItem;
 using InventoryManagementSystemAPI.Exceptions;
 using InventoryManagementSystemAPI.Mappers;
 using InventoryManagementSystemAPI.Repositories.Interfaces;
@@ -12,7 +12,7 @@ namespace InventoryManagementSystemAPI.Services.Implementations
         private readonly IPurchaseOrderRepository _purchaseOrderRepository;
         private readonly IProductRepository _productRepository;
 
-        public PurchaseOrderItemService (IPurchaseOrderItemRepository repository, IPurchaseOrderRepository purchaseOrderRepository, IProductRepository productRepository )
+        public PurchaseOrderItemService(IPurchaseOrderItemRepository repository, IPurchaseOrderRepository purchaseOrderRepository, IProductRepository productRepository)
         {
             _repository = repository;
             _purchaseOrderRepository = purchaseOrderRepository;
@@ -23,14 +23,14 @@ namespace InventoryManagementSystemAPI.Services.Implementations
         {
             var purchaseOrder = await _purchaseOrderRepository.GetByIdAsync(dto.PurchaseOrderId);
 
-            if (purchaseOrder == null) 
+            if (purchaseOrder == null)
             {
                 throw new NotFoundException("Purchase order does not exist.");
             }
 
             var product = await _productRepository.GetByIdAsync(dto.ProductId);
 
-            if (product == null) 
+            if (product == null)
             {
                 throw new NotFoundException("Product does not exist.");
             }

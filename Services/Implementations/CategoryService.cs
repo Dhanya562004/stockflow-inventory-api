@@ -1,4 +1,4 @@
-﻿using InventoryManagementSystemAPI.DTOs.Category;
+using InventoryManagementSystemAPI.DTOs.Category;
 using InventoryManagementSystemAPI.Exceptions;
 using InventoryManagementSystemAPI.Mappers;
 using InventoryManagementSystemAPI.Repositories.Interfaces;
@@ -10,14 +10,14 @@ namespace InventoryManagementSystemAPI.Services.Implementations
     {
         private readonly ICategoryRepository _repository;
 
-        public CategoryService(ICategoryRepository repository) 
+        public CategoryService(ICategoryRepository repository)
         {
             _repository = repository;
         }
 
         public async Task<CategoryDto> CreateAsync(CreateCategoryDto dto)
         {
-            if (await _repository.ExistsByNameAsync(dto.Name)) 
+            if (await _repository.ExistsByNameAsync(dto.Name))
             {
                 throw new DuplicateResourceException("A category with this name already exists.");
             }
@@ -63,9 +63,9 @@ namespace InventoryManagementSystemAPI.Services.Implementations
             if (category == null)
                 throw new NotFoundException("Category not found.");
 
-            if (category.Name != dto.Name) 
+            if (category.Name != dto.Name)
             {
-                if (await _repository.ExistsByNameAsync(dto.Name, id)) 
+                if (await _repository.ExistsByNameAsync(dto.Name, id))
                 {
                     throw new DuplicateResourceException("A category with this name already exists.");
                 }

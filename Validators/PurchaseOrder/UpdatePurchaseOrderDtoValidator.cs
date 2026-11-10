@@ -1,11 +1,11 @@
-﻿using FluentValidation;
+using FluentValidation;
 using InventoryManagementSystemAPI.DTOs.PurchaseOrder;
 
 namespace InventoryManagementSystemAPI.Validators.PurchaseOrder
 {
     public class UpdatePurchaseOrderDtoValidator : AbstractValidator<UpdatePurchaseOrderDto>
     {
-        public UpdatePurchaseOrderDtoValidator() 
+        public UpdatePurchaseOrderDtoValidator()
         {
             RuleFor(x => x.Id).NotEmpty();
             RuleFor(x => x.OrderNumber).NotEmpty().MaximumLength(20);

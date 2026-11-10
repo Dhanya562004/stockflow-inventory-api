@@ -1,11 +1,11 @@
-﻿using InventoryManagementSystemAPI.DTOs.Product;
+using InventoryManagementSystemAPI.DTOs.Product;
 using InventoryManagementSystemAPI.Models;
 
 namespace InventoryManagementSystemAPI.Mappers
 {
     public static class ProductMapper
     {
-        public static ProductDto ToDto(this Product product) 
+        public static ProductDto ToDto(this Product product)
         {
             return new ProductDto
             {

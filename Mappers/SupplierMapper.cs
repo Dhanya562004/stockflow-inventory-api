@@ -1,13 +1,13 @@
-﻿using InventoryManagementSystemAPI.DTOs.Supplier;
+using InventoryManagementSystemAPI.DTOs.Supplier;
 using InventoryManagementSystemAPI.Models;
 
 namespace InventoryManagementSystemAPI.Mappers
 {
     public static class SupplierMapper
     {
-        public static SupplierDto ToDto(this Supplier supplier) 
+        public static SupplierDto ToDto(this Supplier supplier)
         {
-            return new SupplierDto 
+            return new SupplierDto
             {
                 Id = supplier.Id,
                 CompanyName = supplier.CompanyName,
@@ -21,9 +21,9 @@ namespace InventoryManagementSystemAPI.Mappers
             };
         }
 
-        public static Supplier ToEntity(this CreateSupplierDto dto) 
+        public static Supplier ToEntity(this CreateSupplierDto dto)
         {
-            return new Supplier 
+            return new Supplier
             {
                 CompanyName = dto.CompanyName,
                 ContactName = dto.ContactName,
@@ -36,7 +36,7 @@ namespace InventoryManagementSystemAPI.Mappers
             };
         }
 
-        public static void UpdateEntity(this UpdateSupplierDto dto, Supplier supplier) 
+        public static void UpdateEntity(this UpdateSupplierDto dto, Supplier supplier)
         {
             supplier.CompanyName = dto.CompanyName;
             supplier.ContactName = dto.ContactName;
@@ -48,7 +48,7 @@ namespace InventoryManagementSystemAPI.Mappers
             supplier.ZipCode = dto.ZipCode;
         }
 
-        public static List<SupplierDto> ToDtoList(this IEnumerable<Supplier> suppliers) 
+        public static List<SupplierDto> ToDtoList(this IEnumerable<Supplier> suppliers)
         {
             return suppliers
                 .Select(s => s.ToDto())

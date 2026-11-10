@@ -1,4 +1,4 @@
-﻿using InventoryManagementSystemAPI.Configurations;
+using InventoryManagementSystemAPI.Configurations;
 using InventoryManagementSystemAPI.Models.Identity;
 using InventoryManagementSystemAPI.Services.Interfaces;
 using Microsoft.Extensions.Options;
@@ -13,12 +13,12 @@ namespace InventoryManagementSystemAPI.Services.Implementations
     {
         private readonly IOptions<JwtOptions> _jwtOptions;
 
-        public TokenService(IOptions<JwtOptions> jwtOptions) 
+        public TokenService(IOptions<JwtOptions> jwtOptions)
         {
             _jwtOptions = jwtOptions;
         }
 
-        public string CreateToken(ApplicationUser user, IList<string> roles) 
+        public string CreateToken(ApplicationUser user, IList<string> roles)
         {
             var claims = new List<Claim>
             {

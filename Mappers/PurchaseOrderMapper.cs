@@ -1,11 +1,11 @@
-﻿using InventoryManagementSystemAPI.DTOs.PurchaseOrder;
+using InventoryManagementSystemAPI.DTOs.PurchaseOrder;
 using InventoryManagementSystemAPI.Models;
 
 namespace InventoryManagementSystemAPI.Mappers
 {
     public static class PurchaseOrderMapper
     {
-        public static PurchaseOrderDto ToDto(this PurchaseOrder purchaseOrder) 
+        public static PurchaseOrderDto ToDto(this PurchaseOrder purchaseOrder)
         {
             return new PurchaseOrderDto
             {
@@ -18,9 +18,9 @@ namespace InventoryManagementSystemAPI.Mappers
             };
         }
 
-        public static PurchaseOrder ToEntity(this CreatePurchaseOrderDto dto) 
+        public static PurchaseOrder ToEntity(this CreatePurchaseOrderDto dto)
         {
-            return new PurchaseOrder 
+            return new PurchaseOrder
             {
                 OrderNumber = dto.OrderNumber,
                 OrderDate = dto.OrderDate,
@@ -30,7 +30,7 @@ namespace InventoryManagementSystemAPI.Mappers
             };
         }
 
-        public static void UpdateEntity(this UpdatePurchaseOrderDto dto, PurchaseOrder purchaseOrder) 
+        public static void UpdateEntity(this UpdatePurchaseOrderDto dto, PurchaseOrder purchaseOrder)
         {
             purchaseOrder.OrderNumber = dto.OrderNumber;
             purchaseOrder.OrderDate = dto.OrderDate;
@@ -39,7 +39,7 @@ namespace InventoryManagementSystemAPI.Mappers
             purchaseOrder.SupplierId = dto.SupplierId;
         }
 
-        public static List<PurchaseOrderDto> ToDtoList(this IEnumerable<PurchaseOrder> purchaseOrders) 
+        public static List<PurchaseOrderDto> ToDtoList(this IEnumerable<PurchaseOrder> purchaseOrders)
         {
             return purchaseOrders
                 .Select(po => po.ToDto())

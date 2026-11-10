@@ -1,4 +1,4 @@
-﻿using InventoryManagementSystemAPI.Data;
+using InventoryManagementSystemAPI.Data;
 using InventoryManagementSystemAPI.Models;
 using InventoryManagementSystemAPI.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +9,7 @@ namespace InventoryManagementSystemAPI.Repositories.Implementations
     {
         private readonly AppDbContext _context;
 
-        public SupplierRepository(AppDbContext context) 
+        public SupplierRepository(AppDbContext context)
         {
             _context = context;
         }

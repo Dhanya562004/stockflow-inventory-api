@@ -17,7 +17,7 @@ namespace InventoryManagementSystemAPI.Controllers
         private static string? _cachedPromptTemplate;
 
         public ReportsController(
-            IReportService reportService, 
+            IReportService reportService,
             ILlmClient? llmClient = null,
             IWebHostEnvironment? environment = null)
         {
@@ -130,9 +130,9 @@ namespace InventoryManagementSystemAPI.Controllers
             }
 
             // Schema validation: non-empty summary, non-null items array, non-empty recommended action
-            if (analysis == null 
-                || string.IsNullOrWhiteSpace(analysis.Summary) 
-                || analysis.Items == null 
+            if (analysis == null
+                || string.IsNullOrWhiteSpace(analysis.Summary)
+                || analysis.Items == null
                 || string.IsNullOrWhiteSpace(analysis.RecommendedAction))
             {
                 return StatusCode(StatusCodes.Status502BadGateway, new { message = "LLM output did not adhere to required JSON schema." });

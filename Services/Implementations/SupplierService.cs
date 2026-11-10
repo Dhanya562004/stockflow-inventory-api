@@ -1,4 +1,4 @@
-﻿using InventoryManagementSystemAPI.DTOs.Supplier;
+using InventoryManagementSystemAPI.DTOs.Supplier;
 using InventoryManagementSystemAPI.Exceptions;
 using InventoryManagementSystemAPI.Mappers;
 using InventoryManagementSystemAPI.Repositories.Interfaces;
@@ -10,14 +10,14 @@ namespace InventoryManagementSystemAPI.Services.Implementations
     {
         private readonly ISupplierRepository _repository;
 
-        public SupplierService(ISupplierRepository repository) 
+        public SupplierService(ISupplierRepository repository)
         {
             _repository = repository;
         }
 
         public async Task<SupplierDto> CreateAsync(CreateSupplierDto dto)
         {
-            if (await _repository.ExistsByEmailAsync(dto.Email)) 
+            if (await _repository.ExistsByEmailAsync(dto.Email))
             {
                 throw new DuplicateResourceException("A supplier with this email already exists.");
             }
@@ -63,7 +63,7 @@ namespace InventoryManagementSystemAPI.Services.Implementations
             if (supplier == null)
                 throw new NotFoundException("Supplier not found.");
 
-            if (supplier.Email != dto.Email) 
+            if (supplier.Email != dto.Email)
             {
                 if (await _repository.ExistsByEmailAsync(dto.Email, id))
                 {

@@ -1,4 +1,4 @@
-﻿namespace InventoryManagementSystemAPI.Models
+namespace InventoryManagementSystemAPI.Models
 {
     public class PurchaseOrderItem
     {
@@ -9,7 +9,7 @@
         // Relationships
         public Guid PurchaseOrderId { get; set; }
         public PurchaseOrder? PurchaseOrder { get; set; }
-        public Guid ProductId {  get; set; }
+        public Guid ProductId { get; set; }
         public Product? Product { get; set; }
     }
 }

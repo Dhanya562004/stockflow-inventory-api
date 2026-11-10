@@ -1,4 +1,4 @@
-﻿using InventoryManagementSystemAPI.DTOs.PurchaseOrder;
+using InventoryManagementSystemAPI.DTOs.PurchaseOrder;
 using InventoryManagementSystemAPI.Exceptions;
 using InventoryManagementSystemAPI.Mappers;
 using InventoryManagementSystemAPI.Repositories.Implementations;
@@ -12,7 +12,7 @@ namespace InventoryManagementSystemAPI.Services.Implementations
         private readonly IPurchaseOrderRepository _repository;
         private readonly ISupplierRepository _sRepository;
 
-        public PurchaseOrderService(IPurchaseOrderRepository repository, ISupplierRepository sRepository) 
+        public PurchaseOrderService(IPurchaseOrderRepository repository, ISupplierRepository sRepository)
         {
             _repository = repository;
             _sRepository = sRepository;
@@ -27,7 +27,7 @@ namespace InventoryManagementSystemAPI.Services.Implementations
                 throw new NotFoundException("Supplier does not exist.");
             }
 
-            if (await _repository.ExistsByOrderNumberAsync(dto.OrderNumber)) 
+            if (await _repository.ExistsByOrderNumberAsync(dto.OrderNumber))
             {
                 throw new DuplicateResourceException("A purchase order with this order number already exists.");
             }
@@ -80,7 +80,7 @@ namespace InventoryManagementSystemAPI.Services.Implementations
             if (purchaseOrder == null)
                 throw new NotFoundException("Purchase order not found.");
 
-            if (purchaseOrder.OrderNumber != dto.OrderNumber) 
+            if (purchaseOrder.OrderNumber != dto.OrderNumber)
             {
                 if (await _repository.ExistsByOrderNumberAsync(dto.OrderNumber, id))
                 {

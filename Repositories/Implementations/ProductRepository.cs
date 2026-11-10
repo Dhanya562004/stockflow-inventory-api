@@ -1,4 +1,4 @@
-﻿using InventoryManagementSystemAPI.Data;
+using InventoryManagementSystemAPI.Data;
 using InventoryManagementSystemAPI.Models;
 using InventoryManagementSystemAPI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -10,7 +10,7 @@ namespace InventoryManagementSystemAPI.Repositories.Implementations
     {
         private readonly AppDbContext _context;
 
-        public ProductRepository(AppDbContext context) 
+        public ProductRepository(AppDbContext context)
         {
             _context = context;
         }
@@ -43,7 +43,7 @@ namespace InventoryManagementSystemAPI.Repositories.Implementations
                 && (excludeId == null || p.Id != excludeId));
         }
 
-        public async Task<List<Product>> GetAllAsync() 
+        public async Task<List<Product>> GetAllAsync()
         {
             return await _context.Products
                 .Include(p => p.Category)

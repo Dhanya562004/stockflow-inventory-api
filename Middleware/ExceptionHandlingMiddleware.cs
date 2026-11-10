@@ -12,19 +12,19 @@ namespace InventoryManagementSystemAPI.Middleware
             _next = next;
         }
 
-        public async Task InvokeAsync(HttpContext context) 
+        public async Task InvokeAsync(HttpContext context)
         {
             try
             {
                 await _next(context);
             }
             catch (Exception ex)
-            { 
+            {
                 await HandleExceptionAsync(context, ex);
             }
         }
 
-        private static Task HandleExceptionAsync(HttpContext context, Exception exception) 
+        private static Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             int statusCode = exception switch
             {

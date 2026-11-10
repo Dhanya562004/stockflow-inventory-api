@@ -1,11 +1,11 @@
-﻿using FluentValidation;
+using FluentValidation;
 using InventoryManagementSystemAPI.DTOs.Product;
 
 namespace InventoryManagementSystemAPI.Validators.Product
 {
     public class CreateProductDtoValidator : AbstractValidator<CreateProductDto>
     {
-        public CreateProductDtoValidator() 
+        public CreateProductDtoValidator()
         {
             RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
             RuleFor(x => x.Description).NotEmpty().MaximumLength(500);

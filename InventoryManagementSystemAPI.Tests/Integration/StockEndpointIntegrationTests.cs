@@ -59,16 +59,16 @@ namespace InventoryManagementSystemAPI.Tests.Integration
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             await db.Database.EnsureCreatedAsync();
 
-            var category = new Category 
-            { 
-                Id = Guid.NewGuid(), 
-                Name = "Test Cat " + Guid.NewGuid().ToString("N")[..8] 
+            var category = new Category
+            {
+                Id = Guid.NewGuid(),
+                Name = "Test Cat " + Guid.NewGuid().ToString("N")[..8]
             };
-            var supplier = new Supplier 
-            { 
-                Id = Guid.NewGuid(), 
-                CompanyName = "Test Sup " + Guid.NewGuid().ToString("N")[..8], 
-                Email = "sup" + Guid.NewGuid().ToString("N")[..8] + "@example.com" 
+            var supplier = new Supplier
+            {
+                Id = Guid.NewGuid(),
+                CompanyName = "Test Sup " + Guid.NewGuid().ToString("N")[..8],
+                Email = "sup" + Guid.NewGuid().ToString("N")[..8] + "@example.com"
             };
 
             db.Categories.Add(category);

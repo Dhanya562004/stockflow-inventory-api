@@ -1,4 +1,4 @@
-﻿using InventoryManagementSystemAPI.Data;
+using InventoryManagementSystemAPI.Data;
 using InventoryManagementSystemAPI.Models;
 using InventoryManagementSystemAPI.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +9,7 @@ namespace InventoryManagementSystemAPI.Repositories.Implementations
     {
         private readonly AppDbContext _context;
 
-        public CategoryRepository(AppDbContext context) 
+        public CategoryRepository(AppDbContext context)
         {
             _context = context;
         }
@@ -32,7 +32,7 @@ namespace InventoryManagementSystemAPI.Repositories.Implementations
 
         public async Task<bool> ExistsByNameAsync(string name, Guid? excludeId = null)
         {
-            return await _context.Categories.AnyAsync(c => c.Name == name && 
+            return await _context.Categories.AnyAsync(c => c.Name == name &&
                 (excludeId == null || c.Id != excludeId));
         }
 

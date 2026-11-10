@@ -1,11 +1,11 @@
-﻿using FluentValidation;
+using FluentValidation;
 using InventoryManagementSystemAPI.DTOs.Supplier;
 
 namespace InventoryManagementSystemAPI.Validators.Supplier
 {
     public class UpdateSupplierDtoValidator : AbstractValidator<UpdateSupplierDto>
     {
-        public UpdateSupplierDtoValidator() 
+        public UpdateSupplierDtoValidator()
         {
             RuleFor(x => x.Id).NotEmpty();
             RuleFor(x => x.CompanyName).NotEmpty().MaximumLength(100);

@@ -1,13 +1,13 @@
-﻿using InventoryManagementSystemAPI.DTOs.PurchaseOrderItem;
+using InventoryManagementSystemAPI.DTOs.PurchaseOrderItem;
 using InventoryManagementSystemAPI.Models;
 
 namespace InventoryManagementSystemAPI.Mappers
 {
     public static class PurchaseOrderItemMapper
     {
-        public static PurchaseOrderItemDto ToDto(this PurchaseOrderItem purchaseOrderItem) 
+        public static PurchaseOrderItemDto ToDto(this PurchaseOrderItem purchaseOrderItem)
         {
-            return new PurchaseOrderItemDto 
+            return new PurchaseOrderItemDto
             {
                 Id = purchaseOrderItem.Id,
                 Quantity = purchaseOrderItem.Quantity,
@@ -17,9 +17,9 @@ namespace InventoryManagementSystemAPI.Mappers
             };
         }
 
-        public static PurchaseOrderItem ToEntity(this CreatePurchaseOrderItemDto dto) 
+        public static PurchaseOrderItem ToEntity(this CreatePurchaseOrderItemDto dto)
         {
-            return new PurchaseOrderItem 
+            return new PurchaseOrderItem
             {
                 Quantity = dto.Quantity,
                 Cost = dto.Cost,
@@ -28,7 +28,7 @@ namespace InventoryManagementSystemAPI.Mappers
             };
         }
 
-        public static void UpdateEntity(this UpdatePurchaseOrderItemDto dto, PurchaseOrderItem purchaseOrderItem) 
+        public static void UpdateEntity(this UpdatePurchaseOrderItemDto dto, PurchaseOrderItem purchaseOrderItem)
         {
             purchaseOrderItem.Quantity = dto.Quantity;
             purchaseOrderItem.Cost = dto.Cost;
@@ -36,7 +36,7 @@ namespace InventoryManagementSystemAPI.Mappers
             purchaseOrderItem.ProductId = dto.ProductId;
         }
 
-        public static List<PurchaseOrderItemDto> ToDtoList(this IEnumerable<PurchaseOrderItem> purchaseOrderItems) 
+        public static List<PurchaseOrderItemDto> ToDtoList(this IEnumerable<PurchaseOrderItem> purchaseOrderItems)
         {
             return purchaseOrderItems
                 .Select(poi => poi.ToDto())

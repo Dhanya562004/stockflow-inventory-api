@@ -1,4 +1,4 @@
-﻿using InventoryManagementSystemAPI.DTOs.Product;
+using InventoryManagementSystemAPI.DTOs.Product;
 using InventoryManagementSystemAPI.Exceptions;
 using InventoryManagementSystemAPI.Mappers;
 using InventoryManagementSystemAPI.Repositories.Implementations;
@@ -11,7 +11,7 @@ namespace InventoryManagementSystemAPI.Services.Implementations
     {
         private readonly IProductRepository _repository;
 
-        public ProductService(IProductRepository repository) 
+        public ProductService(IProductRepository repository)
         {
             _repository = repository;
         }

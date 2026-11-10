@@ -1,4 +1,4 @@
-﻿using InventoryManagementSystemAPI.Data;
+using InventoryManagementSystemAPI.Data;
 using InventoryManagementSystemAPI.Models;
 using InventoryManagementSystemAPI.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +32,7 @@ namespace InventoryManagementSystemAPI.Repositories.Implementations
 
         public async Task<bool> ExistsByOrderNumberAsync(string orderNumber, Guid? excludeId = null)
         {
-            return await _context.PurchaseOrders.AnyAsync(po => po.OrderNumber == orderNumber && 
+            return await _context.PurchaseOrders.AnyAsync(po => po.OrderNumber == orderNumber &&
                 (excludeId == null || po.Id != excludeId));
         }
 
