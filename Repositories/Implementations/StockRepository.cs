@@ -22,8 +22,15 @@ namespace InventoryManagementSystemAPI.Repositories.Implementations
 
             if (trackedEntry != null)
             {
-                await trackedEntry.ReloadAsync();
-                return trackedEntry.Entity;
+                if (trackedEntry.State == EntityState.Added)
+                {
+                    trackedEntry.State = EntityState.Detached;
+                }
+                else
+                {
+                    await trackedEntry.ReloadAsync();
+                    return trackedEntry.Entity;
+                }
             }
 
             return await _context.Products.FirstOrDefaultAsync(p => p.Id == productId);
@@ -41,14 +48,72 @@ namespace InventoryManagementSystemAPI.Repositories.Implementations
             await _context.SaveChangesAsync();
         }
 
+        public async Task<StockLevel?> GetStockLevelAsync(Guid productId, string locationId)
+        {
+            var trackedEntry = _context.ChangeTracker
+                .Entries<StockLevel>()
+                .FirstOrDefault(e => e.Entity.ProductId == productId && e.Entity.LocationId == locationId);
+
+            if (trackedEntry != null)
+            {
+                if (trackedEntry.State == EntityState.Added)
+                {
+                    trackedEntry.State = EntityState.Detached;
+                }
+                else
+                {
+                    await trackedEntry.ReloadAsync();
+                    return trackedEntry.Entity;
+                }
+            }
+
+            return await _context.StockLevels
+                .FirstOrDefaultAsync(s => s.ProductId == productId && s.LocationId == locationId);
+        }
+
+        public async Task UpdateStockLevelAsync(StockLevel stockLevel)
+        {
+            var entry = _context.Entry(stockLevel);
+            if (entry.State == EntityState.Detached)
+            {
+                _context.StockLevels.Attach(stockLevel);
+                entry.State = EntityState.Modified;
+            }
+            entry.Property(s => s.RowVersion).IsModified = false;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AddStockLevelAsync(StockLevel stockLevel)
+        {
+            await _context.StockLevels.AddAsync(stockLevel);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> LocationExistsAsync(string locationId)
+        {
+            if (string.IsNullOrWhiteSpace(locationId))
+                return false;
+
+            return await _context.StockLevels.AnyAsync(s => s.LocationId == locationId);
+        }
+
         public async Task ExecuteInTransactionAsync(Func<Task> action)
         {
             var strategy = _context.Database.CreateExecutionStrategy();
             await strategy.ExecuteAsync(async () =>
             {
                 await using var transaction = await _context.Database.BeginTransactionAsync();
-                await action();
-                await transaction.CommitAsync();
+                try
+                {
+                    await action();
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    _context.ChangeTracker.Clear();
+                    throw;
+                }
             });
         }
     }

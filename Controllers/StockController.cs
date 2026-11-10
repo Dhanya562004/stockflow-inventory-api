@@ -24,11 +24,36 @@ namespace InventoryManagementSystemAPI.Controllers
         [HttpPost("adjust")]
         public async Task<IActionResult> AdjustStock([FromBody] AdjustStockDto dto)
         {
-            var result = await _stockService.AdjustStockAsync(dto.ProductId, dto.Delta);
+            StockAdjustmentResultDto result;
+            if (string.IsNullOrWhiteSpace(dto.LocationId))
+            {
+                result = await _stockService.AdjustStockAsync(dto.ProductId, dto.Delta);
+            }
+            else
+            {
+                result = await _stockService.AdjustStockAsync(dto.ProductId, dto.LocationId.Trim(), dto.Delta);
+            }
 
             return Ok(new
             {
                 productId = result.ProductId,
+                locationId = result.LocationId,
+                quantity = result.NewQuantity,
+                previousQuantity = result.PreviousQuantity,
+                delta = result.Delta,
+                message = result.Message
+            });
+        }
+
+        [HttpPost("locations/adjust")]
+        public async Task<IActionResult> AdjustWarehouseStock([FromBody] AdjustWarehouseStockDto dto)
+        {
+            var result = await _stockService.AdjustStockAsync(dto.ProductId, dto.LocationId.Trim(), dto.Delta);
+
+            return Ok(new
+            {
+                productId = result.ProductId,
+                locationId = result.LocationId,
                 quantity = result.NewQuantity,
                 previousQuantity = result.PreviousQuantity,
                 delta = result.Delta,
