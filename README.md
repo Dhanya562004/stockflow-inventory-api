@@ -277,10 +277,10 @@ Interactive documentation is available at the live Swagger URL: **[https://dhany
 ### Inventory, Reporting & Health
 | Method | Endpoint | Authorization | Description |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/Stock/adjust` | Anonymous | Adjusts catalog or warehouse stock (`{ productId, locationId?, delta }`) |
-| `POST` | `/api/Stock/locations/adjust` | Anonymous | Dedicated endpoint for warehouse-specific stock adjustment |
-| `GET` | `/api/Reports/low-stock` | Anonymous | Raw parameterized SQL report listing items at or below threshold |
-| `GET` | `/api/Reports/low-stock/summary` | Anonymous | AI-assisted executive replenishment analysis via OpenAI |
+| `POST` | `/api/Stock/adjust` | `Admin, Manager` | Adjusts catalog or warehouse stock (`{ productId, locationId?, delta }`) |
+| `POST` | `/api/Stock/locations/adjust` | `Admin, Manager` | Dedicated endpoint for warehouse-specific stock adjustment |
+| `GET` | `/api/Reports/low-stock` | Authenticated | Raw parameterized SQL report listing items at or below threshold |
+| `GET` | `/api/Reports/low-stock/summary` | Authenticated | AI-assisted executive replenishment analysis via OpenAI |
 | `GET` | `/stock` | Anonymous | Razor MVC interactive stock adjustment and AI dashboard |
 | `GET` | `/health` | Anonymous | Production health check returning service operational status |
 

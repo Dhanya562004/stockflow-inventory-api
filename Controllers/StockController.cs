@@ -1,5 +1,6 @@
 using InventoryManagementSystemAPI.DTOs.Stock;
 using InventoryManagementSystemAPI.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryManagementSystemAPI.Controllers
@@ -15,12 +16,14 @@ namespace InventoryManagementSystemAPI.Controllers
             _stockService = stockService;
         }
 
+        [AllowAnonymous]
         [HttpGet("/stock")]
         public IActionResult Index()
         {
             return View("~/Views/Stock/Index.cshtml");
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost("adjust")]
         public async Task<IActionResult> AdjustStock([FromBody] AdjustStockDto dto)
         {
@@ -45,6 +48,7 @@ namespace InventoryManagementSystemAPI.Controllers
             });
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost("locations/adjust")]
         public async Task<IActionResult> AdjustWarehouseStock([FromBody] AdjustWarehouseStockDto dto)
         {
