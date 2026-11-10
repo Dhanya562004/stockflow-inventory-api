@@ -588,10 +588,4 @@ stockflow-inventory-api/
 - **Modern Single-Page Application (SPA):** Build a standalone React/Next.js dashboard to consume the REST API alongside the existing Razor interface.
 - **Automated Reorder Webhooks:** Outbound webhooks dispatched to suppliers when stock levels breach reorder thresholds.
 
----
 
-## 19. Acknowledgements
-
-- **Original Foundation:** Built upon the open-source inventory project by **Michael Mitchell** ([github.com/mmitchell3397/IMS-WebAPI](https://github.com/mmitchell3397/IMS-WebAPI)).
-- **Extensions & Modernization:** Developed by **Dhanya K** ([github.com/Dhanya562004](https://github.com/Dhanya562004)).
-- **License:** Educational and portfolio demonstration under the MIT License.
