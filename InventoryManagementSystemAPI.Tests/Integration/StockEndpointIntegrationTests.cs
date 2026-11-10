@@ -199,5 +199,126 @@ namespace InventoryManagementSystemAPI.Tests.Integration
                 Assert.False(product.QuantityInStock < 0);
             }
         }
+
+        private static async Task<(Guid ProductId, string LocationId)> SeedProductWithWarehouseStockAsync(
+            CustomWebApplicationFactory factory, int initialWarehouseQty, string locationId = "WH-MAIN")
+        {
+            var productId = await SeedProductAsync(factory, initialWarehouseQty);
+            using var scope = factory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var stockLevel = new StockLevel
+            {
+                Id = Guid.NewGuid(),
+                ProductId = productId,
+                LocationId = locationId,
+                Quantity = initialWarehouseQty
+            };
+            db.StockLevels.Add(stockLevel);
+            await db.SaveChangesAsync();
+
+            return (productId, locationId);
+        }
+
+        [SkippableFact]
+        public async Task PostAdjust_WithWarehouseLocation_WhenValidAdjustment_Returns200()
+        {
+            EnsureSqlServerAvailable();
+            var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
+            var client = factory.CreateClient();
+
+            var (productId, locationId) = await SeedProductWithWarehouseStockAsync(factory, 20, "WH-MAIN");
+
+            var response = await client.PostAsJsonAsync("/api/stock/adjust", new AdjustStockDto
+            {
+                ProductId = productId,
+                LocationId = locationId,
+                Delta = 5
+            });
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+            using var scope = factory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var stockLevel = await db.StockLevels.AsNoTracking().FirstAsync(s => s.ProductId == productId && s.LocationId == locationId);
+            var product = await db.Products.AsNoTracking().FirstAsync(p => p.Id == productId);
+
+            Assert.Equal(25, stockLevel.Quantity);
+            Assert.Equal(25, product.QuantityInStock);
+        }
+
+        [SkippableFact]
+        public async Task PostAdjust_WithWarehouseLocation_WhenUnknownLocation_Returns404()
+        {
+            EnsureSqlServerAvailable();
+            var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
+            var client = factory.CreateClient();
+
+            var (productId, _) = await SeedProductWithWarehouseStockAsync(factory, 10, "WH-MAIN");
+
+            var response = await client.PostAsJsonAsync("/api/stock/adjust", new AdjustStockDto
+            {
+                ProductId = productId,
+                LocationId = "WH-NONEXISTENT",
+                Delta = 5
+            });
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [SkippableFact]
+        public async Task PostAdjust_WithWarehouseLocation_WhenNegativeResult_Returns409()
+        {
+            EnsureSqlServerAvailable();
+            var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
+            var client = factory.CreateClient();
+
+            var (productId, locationId) = await SeedProductWithWarehouseStockAsync(factory, 5, "WH-MAIN");
+
+            var response = await client.PostAsJsonAsync("/api/stock/adjust", new AdjustStockDto
+            {
+                ProductId = productId,
+                LocationId = locationId,
+                Delta = -10
+            });
+
+            Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        }
+
+        [SkippableFact]
+        public async Task PostWarehouseAdjust_DedicatedEndpoint_WhenValid_Returns200()
+        {
+            EnsureSqlServerAvailable();
+            var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
+            var client = factory.CreateClient();
+
+            var (productId, locationId) = await SeedProductWithWarehouseStockAsync(factory, 15, "WH-MAIN");
+
+            var response = await client.PostAsJsonAsync("/api/stock/locations/adjust", new AdjustWarehouseStockDto
+            {
+                ProductId = productId,
+                LocationId = locationId,
+                Delta = 3
+            });
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [SkippableFact]
+        public async Task PostWarehouseAdjust_DedicatedEndpoint_WhenMissingLocation_Returns400()
+        {
+            EnsureSqlServerAvailable();
+            var factory = new CustomWebApplicationFactory(GetTestConnectionString()!);
+            var client = factory.CreateClient();
+
+            var response = await client.PostAsJsonAsync("/api/stock/locations/adjust", new AdjustWarehouseStockDto
+            {
+                ProductId = Guid.NewGuid(),
+                LocationId = "",
+                Delta = 3
+            });
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
     }
 }

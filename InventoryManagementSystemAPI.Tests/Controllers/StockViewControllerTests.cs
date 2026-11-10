@@ -66,6 +66,11 @@ namespace InventoryManagementSystemAPI.Tests.Controllers
             {
                 return Task.FromResult(new StockAdjustmentResultDto());
             }
+
+            public Task<StockAdjustmentResultDto> AdjustStockAsync(Guid productId, string locationId, int delta)
+            {
+                return Task.FromResult(new StockAdjustmentResultDto { LocationId = locationId });
+            }
         }
     }
 }
