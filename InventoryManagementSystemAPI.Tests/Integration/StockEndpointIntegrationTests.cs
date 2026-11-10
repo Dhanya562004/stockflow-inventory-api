@@ -176,6 +176,11 @@ namespace InventoryManagementSystemAPI.Tests.Integration
             });
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+            var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+            Assert.Equal(15, json.GetProperty("quantity").GetInt32());
+            Assert.Equal(10, json.GetProperty("previousQuantity").GetInt32());
+            Assert.Equal(5, json.GetProperty("delta").GetInt32());
         }
 
         [SkippableFact]
