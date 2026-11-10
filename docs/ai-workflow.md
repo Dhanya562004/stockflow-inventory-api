@@ -88,6 +88,16 @@ The following real-world examples from the repository's Git history illustrate i
 
 ---
 
+### Case 4: Incomplete Test Assertion in Stock Adjustment Integration Test
+- **Title:** Incomplete Test Assertion in Stock Adjustment Integration Test
+- **Prompt or task:** Find one real, small issue in the repo (either a test assertion that doesn't check what its name says, or a README statement that doesn't match the code) and fix it with a minimal change.
+- **What the AI produced:** In `StockEndpointIntegrationTests.cs`, the test `PostAdjust_WhenValidAdjustment_Returns200WithNewQuantity` only asserted `Assert.Equal(HttpStatusCode.OK, response.StatusCode);`, failing to verify the returned quantity payload as stated in the test name.
+- **What I checked:** Audited integration test assertions against their method names; ran `dotnet test` with payload deserialization and discovered the controller returns `quantity` rather than `newQuantity`.
+- **What I changed:** Deserialized the response content via `JsonElement` and asserted `quantity == 15`, `previousQuantity == 10`, and `delta == 5`.
+- **Commit:** `478064f`
+
+---
+
 ## 3. Human-in-the-Loop Verification Protocol
 
 To ensure software quality when collaborating with AI tools, the development process follows strict verification gates:
