@@ -51,14 +51,14 @@ namespace InventoryManagementSystemAPI.Data
                 .HasForeignKey(p => p.SupplierId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Purchase Order -> Items 
+            // Purchase Order -> Items
             builder.Entity<PurchaseOrder>()
                 .HasMany(p => p.PurchaseOrderItems)
                 .WithOne(i => i.PurchaseOrder)
                 .HasForeignKey(i => i.PurchaseOrderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Product -> Purchase Order Items 
+            // Product -> Purchase Order Items
             builder.Entity<Product>()
                 .HasMany(p => p.PurchaseOrderItems)
                 .WithOne(i => i.Product)
@@ -86,7 +86,7 @@ namespace InventoryManagementSystemAPI.Data
                 .Property(i => i.Cost)
                 .HasPrecision(18, 2);
 
-            // Other Constraints 
+            // Other Constraints
             builder.Entity<Product>()
                 .HasIndex(p => p.SKU)
                 .IsUnique();
@@ -109,9 +109,6 @@ namespace InventoryManagementSystemAPI.Data
             builder.Entity<StockLevel>()
                 .HasIndex(s => new { s.ProductId, s.LocationId }, "IX_StockLevels_ProductId_LocationId_Unique")
                 .IsUnique();
-
-            builder.Entity<StockLevel>()
-                .HasIndex(s => new { s.ProductId, s.LocationId }, "IX_StockLevels_ProductId_LocationId_Lookup");
         }
     }
 }

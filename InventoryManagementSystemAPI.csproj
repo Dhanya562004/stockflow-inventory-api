@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <DefaultItemExcludes>$(DefaultItemExcludes);InventoryManagementSystemAPI.Tests\**;legacy\**;tests\**;playwright-report\**;docs\**</DefaultItemExcludes>
+    <UserSecretsId>688cc564-fd0f-4aea-9d8c-bb7942f1392e</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

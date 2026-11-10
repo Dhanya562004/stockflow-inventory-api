@@ -297,8 +297,6 @@ namespace InventoryManagementSystemAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex(new[] { "ProductId", "LocationId" }, "IX_StockLevels_ProductId_LocationId_Lookup");
-
                     b.HasIndex(new[] { "ProductId", "LocationId" }, "IX_StockLevels_ProductId_LocationId_Unique")
                         .IsUnique();
 
