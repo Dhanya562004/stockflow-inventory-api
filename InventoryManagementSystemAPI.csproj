@@ -4,15 +4,15 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <DefaultItemExcludes>$(DefaultItemExcludes);InventoryManagementSystemAPI.Tests\**;legacy\**;tests\**;playwright-report\**;docs\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
     <Folder Include="Validators\" />
-    <Compile Remove="InventoryManagementSystemAPI.Tests\**" />
-    <Compile Remove="legacy\**" />
-    <Content Remove="legacy\**" />
-    <EmbeddedResource Remove="legacy\**" />
-    <None Remove="legacy\**" />
+    <Compile Remove="InventoryManagementSystemAPI.Tests\**;legacy\**;tests\**;playwright-report\**;docs\**" />
+    <Content Remove="InventoryManagementSystemAPI.Tests\**;legacy\**;tests\**;playwright-report\**;docs\**" />
+    <EmbeddedResource Remove="InventoryManagementSystemAPI.Tests\**;legacy\**;tests\**;playwright-report\**;docs\**" />
+    <None Remove="InventoryManagementSystemAPI.Tests\**;legacy\**;tests\**;playwright-report\**;docs\**" />
   </ItemGroup>
 
   <ItemGroup>
