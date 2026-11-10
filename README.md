@@ -699,8 +699,7 @@ All changes to StockFlow adhere to rigorous software engineering and quality ass
 - **Conventional Commits:** Standardized prefixing (`feat:`, `fix:`, `docs:`, `test:`, `perf:`) is used across all pull requests to ensure a readable git history.
 - **Code Review Evidence:** [Pull Request #21](https://github.com/Dhanya562004/stockflow-inventory-api/pull/21) illustrates our peer review process, multi-commit evolution, and verification evidence across security, legacy, testing, and architecture.
 - **Branch Protection:** Not configured on GitHub repository (no branch protection rules currently active).
-- **Project Board:** Project board: TODO
-
+- **Project Board:** No project board is currently linked in this repository.
 ---
 
 ## 23. Known Limitations
