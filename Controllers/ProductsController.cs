@@ -1,7 +1,6 @@
 using InventoryManagementSystemAPI.DTOs.Product;
 using InventoryManagementSystemAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryManagementSystemAPI.Controllers
@@ -13,17 +12,16 @@ namespace InventoryManagementSystemAPI.Controllers
     {
         private readonly IProductService _service;
 
-        public ProductsController(IProductService service) 
+        public ProductsController(IProductService service)
         {
             _service = service;
         }
 
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> GetAll() 
+        public async Task<IActionResult> GetAll()
         {
             var products = await _service.GetAllAsync();
-
             return Ok(products);
         }
 
@@ -32,13 +30,12 @@ namespace InventoryManagementSystemAPI.Controllers
         public async Task<IActionResult> GetById(Guid id)
         {
             var product = await _service.GetByIdAsync(id);
-
             return Ok(product);
         }
 
         [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
-        public async Task<IActionResult> Create(CreateProductDto dto) 
+        public async Task<IActionResult> Create(CreateProductDto dto)
         {
             var product = await _service.CreateAsync(dto);
 
@@ -50,10 +47,9 @@ namespace InventoryManagementSystemAPI.Controllers
 
         [Authorize(Roles = "Admin,Manager")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, UpdateProductDto dto) 
+        public async Task<IActionResult> Update(Guid id, UpdateProductDto dto)
         {
             var product = await _service.UpdateAsync(id, dto);
-
             return Ok(product);
         }
 
@@ -61,10 +57,7 @@ namespace InventoryManagementSystemAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var product = await _service.GetByIdAsync(id);
-
-            await _service.DeleteAsync(product.Id);
-
+            await _service.DeleteAsync(id);
             return NoContent();
         }
     }

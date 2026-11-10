@@ -1,11 +1,9 @@
-﻿using InventoryManagementSystemAPI.Configurations;
 using InventoryManagementSystemAPI.DTOs.Identity;
 using InventoryManagementSystemAPI.Models.Identity;
 using InventoryManagementSystemAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using System.Security.Claims;
 
 namespace InventoryManagementSystemAPI.Controllers.Identity
@@ -19,9 +17,9 @@ namespace InventoryManagementSystemAPI.Controllers.Identity
         private readonly ITokenService _tokenService;
         private readonly RoleManager<ApplicationRole> _roleManager;
 
-        public AuthController(UserManager<ApplicationUser> userManager, 
-            SignInManager<ApplicationUser> signInManager, 
-            IOptions<JwtOptions> jwtOptions,
+        public AuthController(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
             ITokenService tokenService,
             RoleManager<ApplicationRole> roleManager)
         {
@@ -32,7 +30,7 @@ namespace InventoryManagementSystemAPI.Controllers.Identity
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginDto dto) 
+        public async Task<IActionResult> Login(LoginDto dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
 
@@ -46,24 +44,20 @@ namespace InventoryManagementSystemAPI.Controllers.Identity
                 return Unauthorized("Invalid credentials");
 
             var roles = await _userManager.GetRolesAsync(user);
-
             var token = _tokenService.CreateToken(user, roles);
 
-            return Ok(new
-            {
-                token
-            });
+            return Ok(new { token });
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterDto dto) 
+        public async Task<IActionResult> Register(RegisterDto dto)
         {
             var existingUser = await _userManager.FindByEmailAsync(dto.Email);
 
             if (existingUser != null)
                 return BadRequest("User already exists");
 
-            var user = new ApplicationUser 
+            var user = new ApplicationUser
             {
                 UserName = dto.Email,
                 Email = dto.Email,
@@ -77,13 +71,21 @@ namespace InventoryManagementSystemAPI.Controllers.Identity
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            await _userManager.AddToRoleAsync(user, "User");
+            var roleResult = await _userManager.AddToRoleAsync(user, "User");
+
+            if (!roleResult.Succeeded)
+            {
+                await _userManager.DeleteAsync(user);
+
+                return StatusCode(
+                    500,
+                    "Registration could not be completed. Please try again.");
+            }
 
             var roles = await _userManager.GetRolesAsync(user);
-
             var token = _tokenService.CreateToken(user, roles);
 
-            return Ok( new
+            return Ok(new
             {
                 token,
                 message = "User created successfully"

@@ -1,7 +1,7 @@
-﻿using InventoryManagementSystemAPI.DTOs.PurchaseOrder;
+
+using InventoryManagementSystemAPI.DTOs.PurchaseOrder;
 using InventoryManagementSystemAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryManagementSystemAPI.Controllers
@@ -22,7 +22,6 @@ namespace InventoryManagementSystemAPI.Controllers
         public async Task<IActionResult> GetAll()
         {
             var purchaseOrders = await _service.GetAllAsync();
-
             return Ok(purchaseOrders);
         }
 
@@ -30,10 +29,10 @@ namespace InventoryManagementSystemAPI.Controllers
         public async Task<IActionResult> GetById(Guid id)
         {
             var purchaseOrder = await _service.GetByIdAsync(id);
-
             return Ok(purchaseOrder);
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public async Task<IActionResult> Create(CreatePurchaseOrderDto dto)
         {
@@ -45,21 +44,19 @@ namespace InventoryManagementSystemAPI.Controllers
                 purchaseOrder);
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, UpdatePurchaseOrderDto dto)
         {
             var purchaseOrder = await _service.UpdateAsync(id, dto);
-
             return Ok(purchaseOrder);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var purchaseOrder = await _service.GetByIdAsync(id);
-
-            await _service.DeleteAsync(purchaseOrder.Id);
-
+            await _service.DeleteAsync(id);
             return NoContent();
         }
     }

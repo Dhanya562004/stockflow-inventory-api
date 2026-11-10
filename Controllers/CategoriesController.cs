@@ -1,7 +1,7 @@
-﻿using InventoryManagementSystemAPI.DTOs.Category;
+
+using InventoryManagementSystemAPI.DTOs.Category;
 using InventoryManagementSystemAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryManagementSystemAPI.Controllers
@@ -22,7 +22,6 @@ namespace InventoryManagementSystemAPI.Controllers
         public async Task<IActionResult> GetAll()
         {
             var categories = await _service.GetAllAsync();
-
             return Ok(categories);
         }
 
@@ -30,10 +29,10 @@ namespace InventoryManagementSystemAPI.Controllers
         public async Task<IActionResult> GetByIdAsync(Guid id)
         {
             var category = await _service.GetByIdAsync(id);
-
             return Ok(category);
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public async Task<IActionResult> Create(CreateCategoryDto dto)
         {
@@ -45,21 +44,19 @@ namespace InventoryManagementSystemAPI.Controllers
                 category);
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, UpdateCategoryDto dto) 
+        public async Task<IActionResult> Update(Guid id, UpdateCategoryDto dto)
         {
-            var category = await _service.GetByIdAsync(id);
-
+            var category = await _service.UpdateAsync(id, dto);
             return Ok(category);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(Guid id, UpdateCategoryDto dto) 
+        public async Task<IActionResult> Delete(Guid id)
         {
-            var category = await _service.UpdateAsync(id, dto);
-
             await _service.DeleteAsync(id);
-
             return NoContent();
         }
     }
