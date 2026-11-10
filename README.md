@@ -482,7 +482,7 @@ The repository features comprehensive test automation across all layers:
 > - **2 Live AI/LLM Tests:** Located in `LiveLlmClientTests.cs` and `LowStockEvaluationTests.cs`. Skipped via `[SkippableFact]` when `OPENAI_API_KEY` is not present, ensuring builds succeed in offline or sandbox environments.
 
 ### Code Coverage & Continuous Integration
-- **Legacy CI Status:** [Passing (Run #42837730376)](https://github.com/Dhanya562004/stockflow-inventory-api/actions/runs/42837730376) — Verified `success` on Windows Server runner with MSBuild and xUnit/Moq test execution.
+- **Legacy CI Status:** [Last successful run: #42837730376](https://github.com/Dhanya562004/stockflow-inventory-api/actions/runs/42837730376) — Verified `success` on Windows Server runner with MSBuild and xUnit/Moq test execution.
 - **CI Line Coverage Threshold:** Enforced at **7.0%** minimum on core application assemblies.
 - **Coverage Tooling:** Coverlet generates Cobertura XML reports uploaded as CI build artifacts.
 
@@ -518,7 +518,7 @@ Continuous Integration is automated using **GitHub Actions**:
   - **Steps:** Dependency restoration, .NET compilation, SQL Server integration test execution, Coverlet code coverage enforcement (7.0% threshold), Jest JavaScript test execution, and Playwright Chromium browser tests.
 - **Legacy Pipeline ([`.github/workflows/legacy-ci.yml`](.github/workflows/legacy-ci.yml)):**
   - **Runner:** Windows Latest
-  - **Status:** [Passing (Run #42837730376)](https://github.com/Dhanya562004/stockflow-inventory-api/actions/runs/42837730376) (Conclusion: `success`)
+  - **Status:** [Last successful run: #42837730376](https://github.com/Dhanya562004/stockflow-inventory-api/actions/runs/42837730376) (Conclusion: `success`)
   - **Steps:** MSBuild restoration and compilation of `.NET Framework 4.8` assemblies, running Moq unit tests in `StockFlow.LegacyMvc5.Tests`.
 
 ---
@@ -597,7 +597,7 @@ To maintain full engineering transparency, the following operational and environ
 
 1. **Shared Cloud Hosting Tier:** The live demo is hosted on MonsterASP.NET shared Windows IIS hosting. Cold starts (idle process recycling) may cause an initial latency spike of 5–10 seconds on the first request.
 2. **Live AI Integration is Mock-Tested:** The `OpenAiLlmClient` implementation uses standard OpenAI API JSON schema completion. Automated CI and unit test suites utilize `MockLlmClient` and synthetic test fixtures. Live calls to OpenAI endpoints require configuring an active, funded `OPENAI_API_KEY` in environment variables.
-3. **Default Seeded Credentials:** In development and test environments, `IdentityDataSeeder` provisions a default admin account (`admin@stockflow.local` / `Admin@123!`). In an enterprise production rollout, this seeder must be disabled or the credentials rotated immediately upon deployment.
+3. **Default Seeded Credentials:** In development and test environments, `IdentityDataSeeder` provisions a default admin account (`admin@stockflow.local`). In an enterprise production rollout, this seeder must be disabled or the credentials rotated immediately upon deployment.
 4. **Code Coverage Baseline:** Code coverage is actively measured via Coverlet and enforced at a **7.0% minimum gate** in the GitHub Actions CI pipeline, focusing heavily on core domain logic, validators, and concurrency execution paths.
 5. **Legacy CI Platform Dependency:** The legacy .NET Framework 4.8 sidecar (`legacy/StockFlow.LegacyMvc5`) relies on `System.Web` and MSBuild, requiring Windows-based runners (`windows-latest` in `.github/workflows/legacy-ci.yml`), whereas the modern .NET 8 API builds cross-platform on Ubuntu Linux.
 6. **HTTPS Redirect Behavior:** Automated HTTP-to-HTTPS redirect rules depend on shared IIS URL rewrite modules and have not been independently verified under all custom domain headers; callers should use `https://dhanya-stockflow.runasp.net` explicitly.
