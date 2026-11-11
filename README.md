@@ -288,6 +288,7 @@ To demonstrate real-world enterprise modernization patterns and brownfield coexi
 - **Key Technologies Used:** Classic `Global.asax`, `Web.config`, OWIN-free ASP.NET MVC 5, and direct ADO.NET data access using `SqlConnection`, `SqlTransaction`, and SQL Server `WITH (UPDLOCK)` query hints to serialize concurrent stock updates (implemented in [`legacy/StockFlow.LegacyMvc5/Data/LegacyAdoNetStockRepository.cs`](legacy/StockFlow.LegacyMvc5/Data/LegacyAdoNetStockRepository.cs#L111)).
 - **Build and Test Workflow:** Built with Windows MSBuild and tested using **xUnit 2.9** and **Moq 4.20**. It runs automatically on `windows-latest` GitHub Actions runners via [`.github/workflows/legacy-ci.yml`](.github/workflows/legacy-ci.yml).
 - **CI Verification Evidence:** [Last successful run: #42837730376](https://github.com/Dhanya562004/stockflow-inventory-api/actions/runs/42837730376) (Conclusion: `success`).
+- **Test Results:** 11 tests executed in Windows CI: **10 passed, 0 failed, 1 skipped**. The skipped test requires `SQL_SERVER_TEST_CONNECTION_STRING` to run its real SQL Server ADO.NET integration test.
 - **Production Boundary:** **This project is an isolated demonstration sidecar and is NOT deployed to production.** The live production environment runs the ASP.NET Core 8 API only.
 
 ---
