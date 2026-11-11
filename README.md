@@ -556,8 +556,7 @@ The repository features comprehensive automated test suites covering unit logic,
 In offline local runs without live external dependencies, 17 tests are intentionally skipped using `[SkippableFact]`:
 - **14 SQL Server Integration Tests:** Located in [`InventoryManagementSystemAPI.Tests/Integration/StockEndpointIntegrationTests.cs`](InventoryManagementSystemAPI.Tests/Integration/StockEndpointIntegrationTests.cs). Skipped when `SQL_SERVER_TEST_CONNECTION_STRING` is unset. When executed against a running SQL Server container or in CI, all 14 tests run and pass. *(Count verified via `git grep -c "SkippableFact" InventoryManagementSystemAPI.Tests/Integration/StockEndpointIntegrationTests.cs`: 14).*
 - **1 Legacy SQL Server Test:** Located in `legacy/StockFlow.LegacyMvc5.Tests/Data/LegacyAdoNetStockRepositoryRealSqlTests.cs`. Exercises raw ADO.NET updates against SQL Server; skipped when `SQL_SERVER_TEST_CONNECTION_STRING` is unset.
-- **2 Live AI/LLM Tests:** Located in `LiveLlmClientTests.cs` and `LowStockEvaluationTests.cs`. Skipped when `OPENAI_API_KEY` (or `LLM_API_KEY`) is unset to avoid unverified external API spend in CI and offline environments.
-
+- **2 Live AI/LLM Tests:** Located in `LiveLlmClientTests.cs` and `LowStockEvaluationTests.cs`. Both tests check for `LLM_API_KEY` and skip when it is not configured or live evaluation is disabled, avoiding external API calls in CI and offline environments.
 ### Running Tests Locally
 
 ```bash
