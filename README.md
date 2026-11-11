@@ -726,4 +726,6 @@ To maintain engineering transparency, the following operational and environment 
 
 ## 25. Acknowledgements
 
-This project is built upon the open-source foundation created by **Michael Mitchell** ([github.com/mmitchell3397/IMS-WebAPI](https://github.com/mmitchell3397/IMS-WebAPI)). Significant enterprise enhancements, multi-warehouse transactions, concurrency controls, SQL optimizations, AI integrations, test automation, and legacy sidecar modernization were developed by **Dhanya K** ([github.com/Dhanya562004](https://github.com/Dhanya562004)).
+This project builds upon an existing open-source foundation and has been further enhanced with enterprise-oriented inventory management features, multi-warehouse transactions, concurrency controls, SQL optimizations, AI integrations, automated testing, and legacy application modernization.
+
+The development process incorporates open-source technologies, AI-assisted tools, and independent implementation, testing, and verification.
