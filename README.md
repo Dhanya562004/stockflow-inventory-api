@@ -3,7 +3,7 @@
 # StockFlow — Inventory Management System API
 
 <p align="center">
-  <strong>A multi-warehouse SaaS Inventory Management REST API and Razor MVC Application built with ASP.NET Core 8, Entity Framework Core, SQL Server, and AI-assisted inventory replenishment insights.</strong>
+  <strong>A high-throughput, multi-warehouse SaaS Inventory Management REST API and Razor MVC application built with ASP.NET Core 8, Entity Framework Core, SQL Server, and AI-assisted inventory replenishment insights.</strong>
 </p>
 
 [![CI](https://github.com/Dhanya562004/stockflow-inventory-api/actions/workflows/ci.yml/badge.svg)](https://github.com/Dhanya562004/stockflow-inventory-api/actions/workflows/ci.yml)
@@ -15,8 +15,8 @@
 [![SQL Server](https://img.shields.io/badge/SQL%20Server-2022-CC292B?style=flat&logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server)
 [![JWT Auth](https://img.shields.io/badge/JWT-Bearer%20Tokens-000000?style=flat&logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
 [![FluentValidation](https://img.shields.io/badge/Validation-FluentValidation-007ACC?style=flat&logo=csharp&logoColor=white)](https://fluentvalidation.net/)
-[![xUnit](https://img.shields.io/badge/Testing-xUnit%20%7C%20Jest%20%7C%20Playwright-blue?style=flat&logo=dotnet&logoColor=white)](https://xunit.net/)
-[![Deployment](https://img.shields.io/badge/Hosted%20On-MonsterASP.NET-008080?style=flat&logo=windows&logoColor=white)](https://dhanya-stockflow.runasp.net/)
+[![Testing](https://img.shields.io/badge/Testing-xUnit%20%7C%20Moq%20%7C%20Jest%20%7C%20Playwright-blue?style=flat&logo=dotnet&logoColor=white)](https://xunit.net/)
+[![Hosted On](https://img.shields.io/badge/Hosted%20On-MonsterASP.NET-008080?style=flat&logo=windows&logoColor=white)](https://dhanya-stockflow.runasp.net/)
 
 <p align="center">
   <a href="https://dhanya-stockflow.runasp.net/"><strong>🌐 Live Application</strong></a> •
@@ -29,7 +29,7 @@
 </div>
 
 > [!NOTE]
-> **Project Acknowledgements & Attribution:** This repository is based on the open-source foundation created by **Michael Mitchell** ([github.com/mmitchell3397/IMS-WebAPI](https://github.com/mmitchell3397/IMS-WebAPI)). **Dhanya K** ([github.com/Dhanya562004](https://github.com/Dhanya562004)) developed significant extensions, including multi-warehouse inventory tracking, atomic dual-entity database transactions, row-version optimistic concurrency handling, raw SQL aggregation reports, an AI Replenishment Advisor calling LLM APIs, an isolated .NET Framework 4.8 / ASP.NET MVC 5 legacy sidecar, automated SQL Server container integration tests, and multi-stage CI/CD workflows.
+> **StockFlow Core Highlights:** Developed and maintained by **Dhanya K.** ([github.com/Dhanya562004](https://github.com/Dhanya562004)), StockFlow provides multi-warehouse inventory tracking, atomic dual-entity database transactions, row-version optimistic concurrency handling, raw SQL aggregation reports, an AI Replenishment Advisor calling LLM APIs, an isolated .NET Framework 4.8 / ASP.NET MVC 5 legacy sidecar, automated SQL Server container integration tests, and multi-stage CI/CD workflows.
 
 ---
 
@@ -37,7 +37,7 @@
 
 - [1. Project Overview](#1-project-overview)
 - [2. Skills Evidence Map](#2-skills-evidence-map)
-- [3. My Contributions vs. Upstream](#3-my-contributions-vs-upstream)
+- [3. Engineering Scope and Contributions](#3-engineering-scope-and-contributions)
 - [4. Live Demo and Useful Links](#4-live-demo-and-useful-links)
 - [5. Screenshots](#5-screenshots)
 - [6. Key Features](#6-key-features)
@@ -56,16 +56,16 @@
 - [19. Deployment](#19-deployment)
 - [20. Project Structure](#20-project-structure)
 - [21. Architectural Decision Records (ADRs)](#21-architectural-decision-records-adrs)
-- [22. Engineering Process & Quality Standards](#22-engineering-process--quality-standards)
+- [22. Engineering Process and Quality Standards](#22-engineering-process-and-quality-standards)
 - [23. Known Limitations](#23-known-limitations)
 - [24. Future Improvements](#24-future-improvements)
-- [25. Acknowledgements](#25-acknowledgements)
+- [25. License and Project Attribution](#25-license-and-project-attribution)
 
 ---
 
 ## 1. Project Overview
 
-**StockFlow** is a backend-focused Inventory Management System engineered within the **ASP.NET Core 8** ecosystem to demonstrate reliable inventory operations, multi-warehouse stock tracking, and brownfield migration patterns.
+**StockFlow** is a backend-focused Inventory Management System engineered within the **ASP.NET Core 8** ecosystem to demonstrate reliable inventory operations, multi-warehouse stock tracking, and brownfield enterprise migration patterns.
 
 Managing inventory at scale requires strict data consistency across sales channels, multi-location storage facilities, and high-frequency order processing. StockFlow addresses these engineering challenges with:
 
@@ -80,42 +80,44 @@ Managing inventory at scale requires strict data consistency across sales channe
 
 ## 2. Skills Evidence Map
 
-The following matrix maps job description engineering requirements directly to tangible source code, configuration files, and verifiable test evidence in this repository:
+The following matrix maps key software engineering requirements directly to tangible source code, configuration files, and verifiable test evidence in this repository:
 
-| JD Requirement | Evidence in this repo | Verified how |
+| Engineering Requirement | Evidence in this Repository | Verification Method & Status |
 | :--- | :--- | :--- |
 | **C# and .NET** | [`Controllers/`](Controllers/), [`Services/`](Services/), [`Data/AppDbContext.cs`](Data/AppDbContext.cs) | Inspected code; compiled cleanly via `dotnet build InventoryManagementSystemAPI.sln` on .NET 8.0 SDK (0 errors, 0 warnings). |
 | **.NET Framework / ASP.NET MVC** | [`legacy/StockFlow.LegacyMvc5/`](legacy/StockFlow.LegacyMvc5/), [`legacy/StockFlow.LegacyMvc5.Tests/`](legacy/StockFlow.LegacyMvc5.Tests/) | Compiled with Windows MSBuild; tested with xUnit/Moq; [Last successful run: #42837730376](https://github.com/Dhanya562004/stockflow-inventory-api/actions/runs/42837730376) verified `success`. |
-| **SQL and SQL Server** | Low-stock raw SQL report ([`Controllers/ReportsController.cs`](Controllers/ReportsController.cs), [`Services/Implementations/ReportService.cs`](Services/Implementations/ReportService.cs)), `RowVersion` concurrency tokens, `executionStrategy.ExecuteAsync` transactions, [`Migrations/`](Migrations/) | EF Core migrations applied; 14 SQL Server integration tests executed in CI against official SQL Server 2022 container. |
-| **HTML, CSS, JavaScript, DOM, API responses** | [`wwwroot/js/stock.js`](wwwroot/js/stock.js), [`tests/js/`](tests/js/) (Jest) | 12 Jest unit tests passing via `npm test --prefix tests/js` verifying DOM mutations, error message rendering, and XSS prevention. |
+| **SQL and SQL Server** | Low-stock raw SQL report ([`Controllers/ReportsController.cs`](Controllers/ReportsController.cs), [`Services/Implementations/ReportService.cs`](Services/Implementations/ReportService.cs)), `RowVersion` concurrency tokens, `executionStrategy.ExecuteAsync` transactions, [`Migrations/`](Migrations/) | EF Core migrations applied; SQL Server integration tests passing in CI (46 of 48 .NET tests pass in CI, including integration tests). |
+| **HTML, CSS, JavaScript, DOM** | [`wwwroot/js/stock.js`](wwwroot/js/stock.js), [`tests/js/`](tests/js/) (Jest) | 12 Jest unit tests passing via `npm test --prefix tests/js` verifying DOM mutations, error message rendering, and XSS prevention. |
 | **HTTP and REST** | Endpoint table in Section 11; status codes `200`, `400`, `401`, `403`, `404`, `409`, `500`, `503` | Verified via live Swagger UI at `/swagger/index.html` and HTTP status assertions in automated integration test suites. |
-| **Unit testing** | [`InventoryManagementSystemAPI.Tests/`](InventoryManagementSystemAPI.Tests/) (xUnit, Moq), [`legacy/StockFlow.LegacyMvc5.Tests/`](legacy/StockFlow.LegacyMvc5.Tests/) (xUnit, Moq) | 75 modern .NET 8 unit/service tests passing; 10 legacy .NET Framework 4.8 unit tests passing. |
-| **Git** | Feature branches, PRs ([#15](https://github.com/Dhanya562004/stockflow-inventory-api/pull/15) through [#24](https://github.com/Dhanya562004/stockflow-inventory-api/pull/24)), conventional commits, `git log` | Linear Git history verified with `git log --oneline` showing structured pull request workflow and squash merges. |
-| **CI/CD** | [`.github/workflows/ci.yml`](.github/workflows/ci.yml), [`.github/workflows/legacy-ci.yml`](.github/workflows/legacy-ci.yml) | Automated GitHub Actions pipelines; Linux runner executing .NET 8 + SQL Server container; Windows runner executing .NET Framework 4.8 MSBuild. |
-| **AI / LLM features** | [`Services/Implementations/OpenAiLlmClient.cs`](Services/Implementations/OpenAiLlmClient.cs), [`Controllers/ReportsController.cs`](Controllers/ReportsController.cs) (low-stock summary prompt, structured JSON schema, and HTTP 503 fallback) | Verified in CI using `MockLlmClient` test fixtures without external API dependency; live OpenAI tests runnable via `OPENAI_API_KEY`. |
-| **AI development tools** | [`docs/ai-workflow.md`](docs/ai-workflow.md) (4 real cases of catching AI errors) | 4 real-world case studies documenting detection and remediation of AI defects (MSBuild item recursion, dynamic binding, solution collision, incomplete assertions). |
-| **Code review and agile** | [`.github/pull_request_template.md`](.github/pull_request_template.md), [`docs/code-review-checklist.md`](docs/code-review-checklist.md) *(located in `docs/`)*, [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/), reviewed [PR #21](https://github.com/Dhanya562004/stockflow-inventory-api/pull/21) | Process enforcement across PRs; code review checklist auditing authorization, input validation, and transaction boundaries. |
-| **Communication and design** | [`docs/architecture.md`](docs/architecture.md), [`docs/design-decisions.md`](docs/design-decisions.md) (6 ADRs) | Architecture specifications with Mermaid diagrams and 6 Architectural Decision Records (ADR-001 through ADR-006). |
+| **Unit & Integration Testing** | [`InventoryManagementSystemAPI.Tests/`](InventoryManagementSystemAPI.Tests/) (xUnit, Moq), [`legacy/StockFlow.LegacyMvc5.Tests/`](legacy/StockFlow.LegacyMvc5.Tests/) (xUnit, Moq) | 46 of 48 .NET tests pass in CI (2 skipped); 10 of 11 legacy .NET Framework 4.8 tests pass in Windows CI (1 skipped). |
+| **Git & Version Control** | Feature branches, PRs ([#15](https://github.com/Dhanya562004/stockflow-inventory-api/pull/15) through [#24](https://github.com/Dhanya562004/stockflow-inventory-api/pull/24)), conventional commits, `git log` | Linear Git history verified with `git log --oneline` showing structured pull request workflow. |
+| **CI/CD Automation** | [`.github/workflows/ci.yml`](.github/workflows/ci.yml), [`.github/workflows/legacy-ci.yml`](.github/workflows/legacy-ci.yml) | Automated GitHub Actions pipelines; Linux runner executing .NET 8 + SQL Server container; Windows runner executing .NET Framework 4.8 MSBuild. |
+| **AI / LLM Engineering** | [`Services/Implementations/OpenAiLlmClient.cs`](Services/Implementations/OpenAiLlmClient.cs), [`Controllers/ReportsController.cs`](Controllers/ReportsController.cs) (low-stock summary prompt, structured JSON schema, and HTTP 503 fallback) | Verified in CI using `MockLlmClient` test fixtures without external API dependency; live OpenAI tests runnable via `OPENAI_API_KEY`. |
+| **AI Development Tools & Review** | [`docs/ai-workflow.md`](docs/ai-workflow.md) (4 real cases of catching AI errors) | 4 real-world case studies documenting detection and remediation of AI defects (MSBuild item recursion, dynamic binding, solution collision, incomplete assertions). |
+| **Code Review & Quality Standards** | [`.github/pull_request_template.md`](.github/pull_request_template.md), [`docs/code-review-checklist.md`](docs/code-review-checklist.md) *(located in `docs/`)*, [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/), reviewed [PR #21](https://github.com/Dhanya562004/stockflow-inventory-api/pull/21) | Process enforcement across PRs; code review checklist auditing authorization, input validation, and transaction boundaries. |
+| **Software Architecture & Design** | [`docs/architecture.md`](docs/architecture.md), [`docs/design-decisions.md`](docs/design-decisions.md) (6 ADRs) | Architecture specifications with Mermaid diagrams and 6 Architectural Decision Records (ADR-001 through ADR-006). |
 
-*(Note on path verification: All paths above were verified against the local repository file tree. The code review checklist is stored in `docs/code-review-checklist.md`, and browser end-to-end tests reside in `tests/js/e2e/stock.spec.js`).*
+*(Note on path verification: All paths above were verified against the repository file tree. The code review checklist is stored in `docs/code-review-checklist.md`, and browser end-to-end tests reside in `tests/js/e2e/stock.spec.js`).*
 
 ---
 
-## 3. My Contributions vs. Upstream
+## 3. Engineering Scope and Contributions
 
-This project builds upon the foundational repository by **Michael Mitchell** ([github.com/mmitchell3397/IMS-WebAPI](https://github.com/mmitchell3397/IMS-WebAPI)). The boundary between original upstream scaffolding and my contributions is outlined below:
+StockFlow originated from a foundational inventory Web API architecture and was systematically upgraded, refactored, and extended by **Dhanya K.** to incorporate enterprise data consistency, multi-location stock tracking, optimistic concurrency protection, and legacy migration benchmarks.
 
-### Upstream Foundation (Michael Mitchell)
+### Foundational Architecture vs. Advanced Extensions
+
+#### Foundational Baseline
 - Initial CRUD API endpoints for Products, Categories, Suppliers, and Purchase Orders.
 - Base Entity Framework Core DbContext and initial relational schema.
 - Initial ASP.NET Core Identity setup and basic JWT authentication pipeline.
 
-### My Contributions (Dhanya K)
+#### Advanced Architecture & Implementations (Dhanya K.)
 1. **Optimistic Concurrency Control:** Implemented SQL Server `RowVersion` timestamp tokens mapped to `Product` and `StockLevel` entities, added retry loops with exponential backoff and jitter, handled `DbUpdateConcurrencyException` with entity reloads (`ReloadAsync()`), and returned semantic `HTTP 409 Conflict` responses ([PR #16](https://github.com/Dhanya562004/stockflow-inventory-api/pull/16), commits `2f48abb`, `434f507`).
 2. **Multi-Warehouse Stock Tracking:** Introduced the `StockLevel` entity for independent per-location inventory tracking (`WH-MAIN`, `WH-SECONDARY`), built atomic adjustment endpoints (`POST /api/stock/adjust` and `POST /api/stock/locations/adjust`), and implemented EF Core execution strategy transactions reconciling warehouse levels with catalog totals ([PR #16](https://github.com/Dhanya562004/stockflow-inventory-api/pull/16), commit `e33e4c4`, [PR #19](https://github.com/Dhanya562004/stockflow-inventory-api/pull/19)).
 3. **High-Performance Low-Stock Reporting:** Engineered a parameterized raw SQL aggregation query (`Database.SqlQuery<LowStockReportDto>`) using `INNER JOIN`, `GROUP BY`, and `HAVING SUM(sl.Quantity) <= @threshold` to aggregate multi-warehouse stock without SQL injection vulnerability ([PR #21](https://github.com/Dhanya562004/stockflow-inventory-api/pull/21), commit `6be24b5`).
 4. **AI Inventory Replenishment Advisor:** Designed the `ILlmClient` abstraction, implemented `OpenAiLlmClient` calling OpenAI's structured JSON API, authored prompt templates, configured HTTP 503 fallback handling for unconfigured keys or network outages, and built `MockLlmClient` for deterministic CI execution (commits `7000f25`, `4d97ff9`, `ce2bdbf`, [PR #21](https://github.com/Dhanya562004/stockflow-inventory-api/pull/21)).
-5. **Comprehensive Automated Test Suite:** Implemented 97 unit and integration tests across 3 projects: xUnit tests with Moq, 14 SQL Server integration tests using `[SkippableFact]` against Docker containers, 12 Jest unit tests verifying DOM rendering and XSS prevention, and Playwright E2E browser automation ([PR #18](https://github.com/Dhanya562004/stockflow-inventory-api/pull/18), [PR #21](https://github.com/Dhanya562004/stockflow-inventory-api/pull/21), [PR #23](https://github.com/Dhanya562004/stockflow-inventory-api/pull/23)).
+5. **Comprehensive Automated Test Suite:** Implemented test suites across 3 projects: 48 .NET tests (46 passing in CI, 2 skipped, including 14 SQL Server integration tests), 11 legacy .NET Framework tests (10 passing in Windows CI, 1 skipped), 12 Jest unit tests verifying DOM rendering and XSS prevention, and Playwright E2E browser automation ([PR #18](https://github.com/Dhanya562004/stockflow-inventory-api/pull/18), [PR #21](https://github.com/Dhanya562004/stockflow-inventory-api/pull/21), [PR #23](https://github.com/Dhanya562004/stockflow-inventory-api/pull/23)).
 6. **Legacy .NET Framework Sidecar:** Created an isolated .NET Framework 4.8 / ASP.NET MVC 5 + Web API 2 project in `legacy/StockFlow.LegacyMvc5` with `Global.asax`, `Web.config`, ADO.NET data access with transactions and `UPDLOCK` hints, and an xUnit/Moq test suite ([PR #15](https://github.com/Dhanya562004/stockflow-inventory-api/pull/15), [PR #21](https://github.com/Dhanya562004/stockflow-inventory-api/pull/21), [PR #22](https://github.com/Dhanya562004/stockflow-inventory-api/pull/22)).
 7. **Multi-Platform CI/CD Pipelines:** Configured GitHub Actions workflows: `.github/workflows/ci.yml` (Ubuntu runner, SQL Server 2022 container, Coverlet code coverage enforcement) and `.github/workflows/legacy-ci.yml` (Windows runner, MSBuild compilation, xUnit/Moq test runner) (commit `68778a3`, [PR #15](https://github.com/Dhanya562004/stockflow-inventory-api/pull/15), [PR #21](https://github.com/Dhanya562004/stockflow-inventory-api/pull/21), [PR #22](https://github.com/Dhanya562004/stockflow-inventory-api/pull/22)).
 8. **Engineering Documentation & Standards:** Created 6 Architectural Decision Records ([docs/design-decisions.md](docs/design-decisions.md)), system architecture diagrams ([docs/architecture.md](docs/architecture.md)), AI workflow case studies ([docs/ai-workflow.md](docs/ai-workflow.md)), pull request template ([.github/pull_request_template.md](.github/pull_request_template.md)), and code review checklist ([docs/code-review-checklist.md](docs/code-review-checklist.md)) ([PR #20](https://github.com/Dhanya562004/stockflow-inventory-api/pull/20), [PR #21](https://github.com/Dhanya562004/stockflow-inventory-api/pull/21), [PR #24](https://github.com/Dhanya562004/stockflow-inventory-api/pull/24)).
@@ -124,7 +126,7 @@ This project builds upon the foundational repository by **Michael Mitchell** ([g
 
 ## 4. Live Demo and Useful Links
 
-The modern .NET 8 application is deployed and running on a Windows Server IIS environment.
+The modern .NET 8 application is deployed and actively running on a production Windows Server IIS environment.
 
 | Resource | URL | Status / Verification Note |
 | :--- | :--- | :--- |
@@ -286,9 +288,8 @@ To demonstrate real-world enterprise modernization patterns and brownfield coexi
 - **What It Is:** An ASP.NET MVC 5 and Web API 2 application running on .NET Framework 4.8.
 - **Where It Lives:** Located in [`legacy/StockFlow.LegacyMvc5/`](legacy/StockFlow.LegacyMvc5/) with its accompanying unit test suite in [`legacy/StockFlow.LegacyMvc5.Tests/`](legacy/StockFlow.LegacyMvc5.Tests/).
 - **Key Technologies Used:** Classic `Global.asax`, `Web.config`, OWIN-free ASP.NET MVC 5, and direct ADO.NET data access using `SqlConnection`, `SqlTransaction`, and SQL Server `WITH (UPDLOCK)` query hints to serialize concurrent stock updates (implemented in [`legacy/StockFlow.LegacyMvc5/Data/LegacyAdoNetStockRepository.cs`](legacy/StockFlow.LegacyMvc5/Data/LegacyAdoNetStockRepository.cs#L111)).
-- **Build and Test Workflow:** Built with Windows MSBuild and tested using **xUnit 2.9** and **Moq 4.20**. It runs automatically on `windows-latest` GitHub Actions runners via [`.github/workflows/legacy-ci.yml`](.github/workflows/legacy-ci.yml).
-- **CI Verification Evidence:** [Last successful run: #42837730376](https://github.com/Dhanya562004/stockflow-inventory-api/actions/runs/42837730376) (Conclusion: `success`).
-- **Test Results:** 11 tests executed in Windows CI: **10 passed, 0 failed, 1 skipped**. The skipped test requires `SQL_SERVER_TEST_CONNECTION_STRING` to run its real SQL Server ADO.NET integration test.
+- **Build and Test Workflow:** Built with Windows MSBuild and tested using **xUnit 2.9** and **Moq 4.20** (10 passed, 0 failed, 1 skipped). It runs automatically on `windows-latest` GitHub Actions runners via [`.github/workflows/legacy-ci.yml`](.github/workflows/legacy-ci.yml).
+- **CI Verification Evidence:** [Last successful run: #42837730376](https://github.com/Dhanya562004/stockflow-inventory-api/actions/runs/42837730376) (Conclusion: `success`, 10 passed, 0 failed, 1 skipped).
 - **Production Boundary:** **This project is an isolated demonstration sidecar and is NOT deployed to production.** The live production environment runs the ASP.NET Core 8 API only.
 
 ---
@@ -542,22 +543,23 @@ dotnet test legacy/StockFlow.Legacy.sln
 
 The repository features comprehensive automated test suites covering unit logic, database transactions, concurrency conflicts, and frontend DOM behaviors.
 
-### Verified Test Results (Verified November 10, 2026)
+### Verified Test Results
 
-| Test Suite | Command | Framework | Passed | Failed | Skipped | Total | Scope / Verification Focus |
+| Test Suite | Environment | Framework | Passed | Failed | Skipped | Total | Scope / Verification Focus |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :--- |
-| **.NET 8 Core Test Suite** | `dotnet test InventoryManagementSystemAPI.sln` | xUnit 2.8 / Moq 4.20 | **75** | **0** | **16** | **91** | Controllers, domain services, DTO validators, concurrency retries, fake repositories, and SQL Server integration tests |
-| **Frontend JavaScript Tests** | `npm test --prefix tests/js` | Jest 29 / jsdom | **12** | **0** | **0** | **12** | Client-side DOM manipulation (`stock.js`), error UI states (400, 404, 409, 500), and XSS prevention |
-| **Legacy .NET Framework Tests** | `dotnet test legacy/StockFlow.Legacy.sln` | xUnit 2.9 / Moq 4.20 | **10** | **0** | **1** | **11** | ASP.NET MVC 5 and Web API 2 controller actions, ADO.NET repository with `UPDLOCK` |
-| **Combined Test Total** | | | **97** | **0** | **17** | **114** | **Verified offline local execution (97 passing, 17 skipped, 0 failed)** |
+| **.NET 8 Test Suite** | CI run | xUnit 2.8 / Moq 4.20 | **46** | **0** | **2** | **48** | Unit tests, service logic, DTO validators, and 14 SQL Server integration tests |
+| **Legacy .NET Framework Tests** | CI run | xUnit 2.9 / Moq 4.20 | **10** | **0** | **1** | **11** | ASP.NET MVC 5 and Web API 2 controller actions, ADO.NET repository with `UPDLOCK` |
+| **Frontend JavaScript Tests** | Local run | Jest 29 / jsdom | **12** | **0** | **0** | **12** | Client-side DOM manipulation (`stock.js`), error UI states (400, 404, 409, 500), and XSS prevention |
 
 *(Note: Browser end-to-end tests are maintained in `tests/js/e2e/stock.spec.js` and run in CI via Playwright).*
 
-### Explanation of Skipped Tests in Local / Offline Runs
-In offline local runs without live external dependencies, 17 tests are intentionally skipped using `[SkippableFact]`:
-- **14 SQL Server Integration Tests:** Located in [`InventoryManagementSystemAPI.Tests/Integration/StockEndpointIntegrationTests.cs`](InventoryManagementSystemAPI.Tests/Integration/StockEndpointIntegrationTests.cs). Skipped when `SQL_SERVER_TEST_CONNECTION_STRING` is unset. When executed against a running SQL Server container or in CI, all 14 tests run and pass. *(Count verified via `git grep -c "SkippableFact" InventoryManagementSystemAPI.Tests/Integration/StockEndpointIntegrationTests.cs`: 14).*
-- **1 Legacy SQL Server Test:** Located in `legacy/StockFlow.LegacyMvc5.Tests/Data/LegacyAdoNetStockRepositoryRealSqlTests.cs`. Exercises raw ADO.NET updates against SQL Server; skipped when `SQL_SERVER_TEST_CONNECTION_STRING` is unset.
-- **2 Live AI/LLM Tests:** Located in `LiveLlmClientTests.cs` and `LowStockEvaluationTests.cs`. Both tests check for `LLM_API_KEY` and skip when it is not configured or live evaluation is disabled, avoiding external API calls in CI and offline environments.
+### Explanation of Skipped Tests
+In automated CI runs, only 3 tests are skipped because they require external secrets not configured in CI:
+- **2 Live AI/LLM Tests:** Located in `LiveLlmClientTests.cs` and `LowStockEvaluationTests.cs`. Both tests check for `LLM_API_KEY` via `[SkippableFact]` and skip when an API key is not configured or live evaluation is disabled, avoiding external API calls in CI.
+- **1 Legacy SQL Server Test:** Located in `legacy/StockFlow.LegacyMvc5.Tests/Data/LegacyAdoNetStockRepositoryRealSqlTests.cs`. Exercises raw ADO.NET updates against real SQL Server; skipped via `[SkippableFact]` because `SQL_SERVER_TEST_CONNECTION_STRING` is not configured in the legacy Windows CI runner.
+
+All 14 SQL Server integration tests run and pass in CI against the SQL Server container.
+
 ### Running Tests Locally
 
 ```bash
@@ -689,7 +691,7 @@ Key architectural decisions, context, trade-offs, and rejected alternatives are 
 
 ---
 
-## 22. Engineering Process & Quality Standards
+## 22. Engineering Process and Quality Standards
 
 All changes to StockFlow adhere to rigorous software engineering and quality assurance practices:
 
@@ -700,6 +702,7 @@ All changes to StockFlow adhere to rigorous software engineering and quality ass
 - **Code Review Evidence:** [Pull Request #21](https://github.com/Dhanya562004/stockflow-inventory-api/pull/21) illustrates our peer review process, multi-commit evolution, and verification evidence across security, legacy, testing, and architecture.
 - **Branch Protection:** Not configured on GitHub repository (no branch protection rules currently active).
 - **Project Board:** No project board is currently linked in this repository.
+
 ---
 
 ## 23. Known Limitations
@@ -725,8 +728,8 @@ To maintain engineering transparency, the following operational and environment 
 
 ---
 
-## 25. Acknowledgements
+## 25. License and Project Attribution
 
-This project builds upon an existing open-source foundation and has been further enhanced with enterprise-oriented inventory management features, multi-warehouse transactions, concurrency controls, SQL optimizations, AI integrations, automated testing, and legacy application modernization.
+**StockFlow** is developed and maintained by **Dhanya K.** ([github.com/Dhanya562004](https://github.com/Dhanya562004)). Significant enterprise enhancements, multi-warehouse transactions, concurrency controls, SQL optimizations, AI integrations, test automation, and legacy sidecar modernization were engineered in this repository.
 
-The development process incorporates open-source technologies, AI-assisted tools, and independent implementation, testing, and verification.
+This project is distributed under the terms of the [MIT License](LICENSE).
